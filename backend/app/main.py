@@ -38,9 +38,9 @@ async def generate_recommendation(request: EnhancedUserRequest):
             diversification=request.diversification
         )
         
-        # CRITICAL UPDATE: 'await' added here to halt processing until real-time network calculations complete
+        # Executes mathematical portfolio distribution checks via our upgraded async optimizer
         optimization_results = await portfolio_optimizer_service.calculate_allocation(
-            total_capital=float(parsed_profile.investment_amount), # CRITICAL FIX: Forces string variants into solid floating data points
+            total_capital=float(parsed_profile.investment_amount),
             target_stocks=recommended_stocks,
             risk_profile=active_risk
         )
@@ -107,6 +107,8 @@ async def generate_recommendation(request: EnhancedUserRequest):
             "unallocated_cash": round(leftover_cash, 2),
             "portfolio_beta": optimization_results["portfolio_beta"],
             "expected_portfolio_return": optimization_results["expected_portfolio_return"],
+            "sharpe_ratio": optimization_results.get("sharpe_ratio", 0.0),            # PHASE 1 INTEGRATION
+            "risk_free_rate": optimization_results.get("risk_free_rate_meta", 6.75),  # PHASE 1 INTEGRATION
             "backtest_trajectory": trajectory,
             "market_macro": {
                 "index_name": index_name,
