@@ -3,7 +3,7 @@ from app.config import settings
 
 class FinancialApiService:
     def __init__(self):
-        # A master dictionary tracking standard equities across sectors for dynamic matching
+        # Master dictionary tracking standard equities across sectors for dynamic matching
         self.master_stock_universe = {
             "indian": [
                 {"symbol": "INFY.NS", "name": "Infosys Limited", "beta": 0.88, "sector": "Technology", "pe_ratio": 24.2, "dividend_yield": 1.41, "expected_return": 0.14, "fallback_price": 1850.00},
@@ -25,20 +25,16 @@ class FinancialApiService:
 
     async def fetch_live_market_quote(self, symbol: str) -> float:
         """
-        Queries FMP real-time quote endpoints with authenticated headers.
+        Queries live asset prices using yfinance's open public database infrastructure.
+        Bypasses API key limitations and handles international equity extensions natively.
         """
-        api_key = settings.FMP_API_KEY
         cleaned_symbol = symbol.strip().upper()
         
-        # FIX: If it's the local mock token or missing context, hit backup directly
-        if not api_key or "your_actual" in api_key:
-            return self._get_fallback_price(cleaned_symbol)
-
-        url = f"https://financialmodelingprep.com/api/v3/quote/{cleaned_symbol}?apikey={api_key}"
+        # Public route url layout configuration
+        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{cleaned_symbol}"
         
-        # PRODUCTION FIX: Inject standard browser user-agents to keep Render containers from getting dropped by FMP firewalls
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
             "Accept": "application/json"
         }
         
@@ -47,12 +43,17 @@ class FinancialApiService:
                 response = await client.get(url, timeout=10.0)
                 if response.status_code == 200:
                     payload = response.json()
-                    if payload and len(payload) > 0:
-                        live_price = float(payload[0].get("price", 0.0))
-                        if live_price > 0:
-                            return live_price
+                    
+                    # Navigate the nested JSON response tree safely
+                    result_list = payload.get("chart", {}).get("result", [])
+                    if result_list:
+                        meta = result_list[0].get("meta", {})
+                        live_price = meta.get("regularMarketPrice")
+                        
+                        if live_price is not None and float(live_price) > 0:
+                            return float(live_price)
             except Exception as network_exception:
-                print(f"Datastream link fault routing live quotes for asset {symbol}: {network_exception}")
+                print(f"Public pipeline link fault routing live quotes for asset {symbol}: {network_exception}")
                 
         return self._get_fallback_price(cleaned_symbol)
 
