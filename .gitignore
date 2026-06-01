@@ -1,0 +1,14 @@
+# Secrets
+.env
+backend/.env
+backend/app/services/.env
+
+# Python build noise
+__pycache__/
+*.pyc
+
+# Frontend build noise
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
