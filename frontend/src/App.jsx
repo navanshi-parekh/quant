@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { 
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+} from 'recharts';
 
 function App() {
   const [prompt, setPrompt] = useState('');
@@ -33,7 +36,6 @@ function App() {
     setError(null);
     setData(null);
 
-    // FIXED: Upgraded from process.env to import.meta.env to support Vite's compilation architecture
     const backendBaseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
     try {
@@ -46,7 +48,7 @@ function App() {
           diversification: diversification,
           horizon_strategy: horizonStrategy,
           target_profit_percentage: Number(targetProfit),
-          sectors: activeSectors // FIXED: Now forwards chosen sector targets down to the server framework
+          sectors: activeSectors
         }),
       });
       if (!response.ok) throw new Error('Internal validation processing fault over backend endpoints.');
@@ -85,29 +87,7 @@ function App() {
   };
 
   const currencySymbol = market === 'american' ? '$' : '₹';
-  
-  const getMilestonePoints = (trajectoryArray) => {
-    if (!trajectoryArray || trajectoryArray.length === 0) return [];
-    const len = trajectoryArray.length;
-    const start = { ...trajectoryArray[0], descriptiveLabel: "Initial Capital", technicalLabel: "Month 0 (Allocation Baseline)" };
-    const midIndex = Math.floor((len - 1) / 2);
-    const mid = { ...trajectoryArray[midIndex], descriptiveLabel: "Mid-Term Progression", technicalLabel: `Month ${midIndex} (Compounding Velocity)` };
-    const end = { ...trajectoryArray[len - 1], descriptiveLabel: "Terminal Valuation", technicalLabel: `Month ${len - 1} (${horizon} Year Forecast Target)` };
-    
-    if (midIndex === 0 || midIndex === len - 1) {
-      return [start, end];
-    }
-    return [start, mid, end];
-  };
-
-  const milestoneTrajectory = data?.backtest_trajectory ? getMilestonePoints(data.backtest_trajectory) : [];
-  
-  const maxTrajectoryVal = milestoneTrajectory.length 
-    ? Math.max(...milestoneTrajectory.map(t => t.valuation || 0)) 
-    : 1;
-  const minTrajectoryVal = milestoneTrajectory.length 
-    ? Math.min(...milestoneTrajectory.map(t => t.valuation || 0)) 
-    : 0;
+  const currencyCode = market === 'american' ? 'USD' : 'INR';
 
   const checkIsOvervalued = (peValue) => {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
@@ -115,13 +95,11 @@ function App() {
 
   return (
     <div style={styles.container}>
-      {/* CSS Injection for Dynamic Breakpoints without adding external files */}
       <style>{`
         @media (max-width: 900px) {
           .input-layout-responsive { grid-template-columns: 1fr !important; }
           .grid-2col-responsive { grid-template-columns: 1fr !important; }
           .header-responsive { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
-          .chart-outer-responsive { min-width: 500px !important; }
         }
       `}</style>
 
@@ -226,10 +204,9 @@ function App() {
         {/* Structural Telemetry Layout Row */}
         <div style={styles.splitTelemetryRow}>
           <section style={{...styles.educationalCard, margin: 0, flex: 1.2}}>
-            <h3 style={styles.cardTitle}>🧠 Quantitative Risk Matrix Breakdown: What is Beta (β)?</h3>
+            <h3 style={styles.cardTitle}>🧠 Sharpe Ratio Core Metric: Risk-Adjusted Return Performance</h3>
             <p style={styles.educationalText}>
-              <strong>Beta ($\beta$)</strong> indexes systematic asset volatility against a structural market benchmark (baseline index = <strong>1.0</strong>). 
-              Low beta entries (&lt;1.0) provide high drawdown cushion, while high beta choices (&gt;1.0) accelerate performance capture curves during market rallies.
+              The **Sharpe Ratio** tracks your excess returns relative to the portfolio's underlying mathematical volatility. Higher metrics (&gt;1.5) indicate the current distribution is generating structural alpha per unit of capital risk, rather than simply hunting beta.
             </p>
           </section>
 
@@ -239,16 +216,16 @@ function App() {
               <div style={styles.macroTelemetryGrid}>
                 <div>
                   <div style={{fontSize: '11px', color: '#8b949e'}}>INDEX PRICE</div>
-                  <div style={{fontSize: '16px', fontWeight: 'bold', color: '#e6edf3'}}>{currencySymbol}{data.market_macro.index_price.toLocaleString('en-IN')}</div>
+                  <div style={{fontSize: '14px', fontWeight: 'bold', color: '#e6edf3'}}>{currencySymbol}{data.market_macro.index_price.toLocaleString('en-IN')}</div>
                 </div>
                 <div>
                   <div style={{fontSize: '11px', color: '#8b949e'}}>INDEX P/E</div>
-                  <div style={{fontSize: '16px', fontWeight: 'bold', color: '#ff9800'}}>{data.market_macro.index_pe}</div>
+                  <div style={{fontSize: '14px', fontWeight: 'bold', color: '#ff9800'}}>{data.market_macro.index_pe}</div>
                 </div>
                 <div>
                   <div style={{fontSize: '11px', color: '#8b949e'}}>PORTFOLIO P/E GAUGE</div>
                   <div style={{
-                    fontSize: '16px', 
+                    fontSize: '14px', 
                     fontWeight: 'bold', 
                     color: data.market_macro.portfolio_avg_pe > data.market_macro.index_pe ? '#ef4444' : '#34d399'
                   }}>
@@ -276,69 +253,62 @@ function App() {
                 </div>
               </div>
               <div style={styles.kpiCard}>
-                <div style={styles.kpiLabel}>PORTFOLIO BETA FACTOR</div>
-                <div style={{...styles.kpiValue, color: getRiskColor(data.profile?.risk_profile || riskProfile)}}>
-                  {data.portfolio_beta || 0}
+                <div style={styles.kpiLabel}>SHARPE RATIO ENGINE</div>
+                <div style={{...styles.kpiValue, color: data.sharpe_ratio > 1.0 ? '#34d399' : '#f59e0b'}}>
+                  SR {data.sharpe_ratio || 0.0}
                 </div>
+              </div>
+              <div style={styles.kpiCard}>
+                <div style={styles.kpiLabel}>LIVE RISK-FREE BASELINE</div>
+                <div style={{...styles.kpiValue, color: '#a855f7'}}>{data.risk_free_rate || 6.75}%</div>
               </div>
               <div style={styles.kpiCard}>
                 <div style={styles.kpiLabel}>ESTIMATED PORTFOLIO YIELD (CAGR)</div>
                 <div style={{...styles.kpiValue, color: '#34d399'}}>{data.expected_portfolio_return || 0}%</div>
               </div>
-              <div style={styles.kpiCard}>
-                <div style={styles.kpiLabel}>TARGET EXPONENT MILESTONE</div>
-                <div style={{...styles.kpiValue, color: '#a855f7'}}>
-                  {currencySymbol}{(data.profile?.target_profit_milestone || 0).toLocaleString('en-IN')}
-                </div>
-              </div>
             </div>
 
-            {/* Backtest Trajectory Map */}
-            {data.backtest_trajectory && milestoneTrajectory.length > 0 && (
-              <section style={{...styles.card, marginBottom: '24px', border: '1px solid #334155'}}>
+            {/* Backtest Trajectory Map - FIXED WITH FLUID RECHARTS VECTOR GRIDS */}
+            {data.backtest_trajectory && data.backtest_trajectory.length > 0 && (
+              <section style={{...styles.card, marginBottom: '24px', border: '1px solid #1f242e'}}>
                 <h3 style={styles.cardTitle}>📈 Portfolio Growth Engine Timeline Forecast</h3>
                 <p style={{fontSize: '12px', color: '#8b949e', marginTop: '-10px', marginBottom: '20px'}}>
-                  This predictive map illustrates how your deployed allocation constructs compound from day one through your designated <strong>{horizon} year</strong> target window.
+                  This vector timeline charts your compounded valuation trajectory over the specified **{horizon} year** deployment target window.
                 </p>
-                <div style={styles.chartScrollFrame}>
-                  <div style={styles.chartOuterFrame} className="chart-outer-responsive">
-                    {milestoneTrajectory.map((point, index) => {
-                      const valuation = point.valuation || 0;
-                      const heightPercent = maxTrajectoryVal !== minTrajectoryVal 
-                        ? ((valuation - minTrajectoryVal) / (maxTrajectoryVal - minTrajectoryVal)) * 60 + 25 
-                        : 85;
-                      const isTerminal = index === milestoneTrajectory.length - 1;
-
-                      return (
-                        <div key={index} style={{...styles.chartColGroup, flex: 1}}>
-                          <div style={{...styles.chartValueTooltip, fontSize: '13px', fontWeight: 'bold', color: isTerminal ? '#34d399' : '#e6edf3'}}>
-                            {currencySymbol}{Math.round(valuation).toLocaleString('en-IN')}
-                          </div>
-                          <div style={{
-                            ...styles.chartBarUnit, 
-                            height: `${heightPercent}px`,
-                            width: '55%',
-                            backgroundColor: isTerminal ? 'rgba(16,185,129,0.2)' : 'rgba(30,41,59,0.5)',
-                            border: isTerminal ? '2px solid #10b981' : '1px solid #475569',
-                            boxShadow: isTerminal ? '0 0 15px rgba(16,185,129,0.15)' : 'none'
-                          }}></div>
-                          <div style={{fontSize: '12px', fontWeight: 'bold', color: isTerminal ? '#34d399' : '#58a6ff', marginTop: '4px'}}>
-                            {point.descriptiveLabel}
-                          </div>
-                          <div style={{fontSize: '10px', color: '#6e7681'}}>{point.technicalLabel}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
+                
+                <div style={{ width: '100%', height: 260, marginTop: '20px' }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={data.backtest_trajectory} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#161b26" vertical={false} />
+                      <XAxis dataKey="label" stroke="#6e7681" tickLine={false} style={{ fontSize: '11px' }} />
+                      <YAxis 
+                        stroke="#6e7681" 
+                        tickLine={false} 
+                        style={{ fontSize: '11px' }}
+                        tickFormatter={(v) => `${currencySymbol}${Math.round(v).toLocaleString('en-IN')}`} 
+                      />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#0d111a', borderColor: '#2d3545', borderRadius: '8px' }}
+                        itemStyle={{ color: '#58a6ff', fontSize: '12px' }}
+                        labelStyle={{ color: '#8b949e', fontSize: '11px', fontWeight: 'bold' }}
+                        formatter={(value) => [`${currencySymbol}${Number(value).toLocaleString('en-IN')}`, 'Portfolio Valuation']}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="valuation" 
+                        stroke="#58a6ff" 
+                        strokeWidth={3} 
+                        dot={{ r: 3, stroke: '#58a6ff', strokeWidth: 2, fill: '#070a13' }}
+                        activeDot={{ r: 6 }} 
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
 
                 <div style={styles.chartExplanationBox}>
-                  <span style={{color: '#a855f7', fontWeight: 'bold', fontSize: '12px'}}>🔍 Understanding Your Forecast Path:</span>
-                  <p style={{fontSize: '12px', color: '#94a3b8', marginTop: '4px', lineHeight: '1.6'}}>
-                    Starting with an active deployed cash line of <strong>{currencySymbol}{Math.round(milestoneTrajectory[0]?.valuation || 0).toLocaleString('en-IN')}</strong>, 
-                    the allocation strategy captures a projected compounded annual yield of <strong>{data.expected_portfolio_return}%</strong>. Over the specified 
-                    <strong> {horizon} year horizon</strong>, compound math expands your baseline asset matrix out to an estimated value of 
-                    <strong style={{color: '#34d399'}}> {currencySymbol}{Math.round(milestoneTrajectory[milestoneTrajectory.length - 1]?.valuation || 0).toLocaleString('en-IN')}</strong>.
+                  <span style={{color: '#a855f7', fontWeight: 'bold', fontSize: '12px'}}>🔍 Forecast Summary Analytics:</span>
+                  <p style={{fontSize: '12px', color: '#94a3b8', marginTop: '4px', lineHeight: '1.6', margin: 0}}>
+                    Starting with an active asset allocation baseline of <strong>{currencySymbol}{Math.round(data.backtest_trajectory[0]?.valuation || 0).toLocaleString('en-IN')} {currencyCode}</strong>, your optimized portfolio captures a projected compounded annual yield of <strong>{data.expected_portfolio_return}%</strong>. Compounding expands your baseline out to an estimated terminal valuation of <strong style={{color: '#34d399'}}>{currencySymbol}{Math.round(data.backtest_trajectory[data.backtest_trajectory.length - 1]?.valuation || 0).toLocaleString('en-IN')} {currencyCode}</strong>.
                   </p>
                 </div>
               </section>
@@ -479,16 +449,9 @@ const styles = {
   kpiCard: { backgroundColor: '#0d111a', border: '1px solid #1f242e', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '6px' },
   kpiLabel: { color: '#8b949e', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.6px' },
   kpiValue: { fontSize: '20px', fontWeight: '800' },
-  chartScrollFrame: { padding: '10px 0', width: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' },
-  chartOuterFrame: { display: 'flex', alignItems: 'flex-end', justifyContent: 'space-around', height: '170px', paddingBottom: '14px', borderBottom: '2px dashed #1f242e' },
-  chartColGroup: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', minWidth: '100px' },
-  chartValueTooltip: { fontFamily: 'monospace' },
-  chartBarUnit: { borderRadius: '6px 6px 0 0', transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)' },
   chartExplanationBox: { backgroundColor: '#141b2e', border: '1px solid #23355c', borderRadius: '8px', padding: '14px', marginTop: '20px' },
   dashboardLayout: { display: 'flex', flexDirection: 'column', gap: '24px' },
   fullWidthCard: { width: '100%' },
-  leftCol: { display: 'flex', flexDirection: 'column', gap: '24px' },
-  rightCol: { display: 'flex', flexDirection: 'column', gap: '24px' },
   card: { backgroundColor: '#0d111a', border: '1px solid #1f242e', borderRadius: '12px', padding: '24px' },
   cardTitle: { color: '#e6edf3', fontSize: '14px', fontWeight: 'bold', borderBottom: '1px solid #1f242e', paddingBottom: '12px', marginBottom: '16px', textTransform: 'uppercase' },
   tableWrapper: { overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' },
