@@ -3,7 +3,7 @@ from app.config import settings
 
 class FinancialApiService:
     def __init__(self):
-        # A master dictionary tracking standard equities across sectors for dynamic matching
+        # Master dictionary tracking standard equities across sectors for dynamic matching
         self.master_stock_universe = {
             "indian": [
                 {"symbol": "INFY.NS", "name": "Infosys Limited", "beta": 0.88, "sector": "Technology", "pe_ratio": 24.2, "dividend_yield": 1.41, "expected_return": 0.14, "fallback_price": 1620.00},
@@ -26,14 +26,17 @@ class FinancialApiService:
     async def fetch_live_market_quote(self, symbol: str) -> float:
         """
         Queries FMP real-time quote endpoints.
-        Safely falls back to local static matrices if API calls fail.
+        Forces uppercase symbols to align perfectly with FMP's global lookup systems.
         """
         api_key = settings.FMP_API_KEY
         if not api_key:
             print("Warning: FMP operational credentials missing.")
             return self._get_fallback_price(symbol)
 
-        url = f"https://financialmodelingprep.com/api/v3/quote/{symbol}?apikey={api_key}"
+        # FIXED: Enforce uppercase to keep FMP endpoints from rejecting global market lookups
+        cleaned_symbol = symbol.strip().upper()
+        
+        url = f"https://financialmodelingprep.com/api/v3/quote/{cleaned_symbol}?apikey={api_key}"
         
         async with httpx.AsyncClient() as client:
             try:
@@ -50,11 +53,10 @@ class FinancialApiService:
         return self._get_fallback_price(symbol)
 
     def _get_fallback_price(self, symbol: str) -> float:
-        """Safely isolates the dictionary tracking lookup logic to prevent structural scoping bugs."""
+        """Safely isolates dictionary tracking lookups to prevent internal scoping variables from leaking."""
         for market_type in self.master_stock_universe.values():
             for stock_item in market_type:
-                if stock_item["symbol"] == symbol:
-                    # Target the verified fallback price parameter explicitly
+                if stock_item["symbol"].upper() == symbol.upper():
                     return stock_item["fallback_price"]
         return 100.0
 
@@ -67,7 +69,6 @@ class FinancialApiService:
         available_stocks = self.master_stock_universe.get(market_key, [])
 
         if not sectors:
-            # Map everything out if nothing is checked to keep the matrix alive
             return [dict(s, price=s["fallback_price"]) for s in available_stocks[:3]]
 
         targeted_sectors = [s.lower().strip() for s in sectors]
@@ -75,8 +76,8 @@ class FinancialApiService:
         filtered_recommendations = []
         for stock in available_stocks:
             if stock["sector"].lower() in targeted_sectors:
-                # Add the mandatory baseline "price" item key expected downstream by the optimizer matrix layout
                 stock_copy = stock.copy()
+                # Initialize standard price key with fallback value before fetching live rates
                 stock_copy["price"] = stock_copy["fallback_price"]
                 filtered_recommendations.append(stock_copy)
 
