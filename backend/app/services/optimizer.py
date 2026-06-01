@@ -1,20 +1,35 @@
 from typing import List, Dict, Any
+# Import the shared service instance directly from your financial_api file
+from app.services.financial_api import financial_api_service
 
 class PortfolioOptimizerService:
-    def calculate_allocation(self, total_capital: float, target_stocks: List[Dict[str, Any]], risk_profile: str) -> Dict[str, Any]:
+    async def calculate_allocation(self, total_capital: float, target_stocks: List[Dict[str, Any]], risk_profile: str) -> Dict[str, Any]:
         """
         Advanced Multi-Asset Optimizer that builds capital weights dynamically
         by cross-referencing systematic asset risk (Beta) with strategic investor profiles.
+        Integrates real-time price spot ticks via external financial data feeds.
         """
         if not target_stocks:
             return {"portfolio": [], "portfolio_beta": 0.0, "expected_portfolio_return": 0.0}
 
+        # --- STEP 1: RESOLVE REAL-TIME MARKET PRICES ---
+        # Intercept the target stock list and inject authentic real-time spot prices
+        for stock in target_stocks:
+            ticker_symbol = stock.get("symbol")
+            
+            # Await the live market quote from your new class service instance
+            live_price = await financial_api_service.fetch_live_market_quote(ticker_symbol)
+            
+            # Update the dictionary layer so down-funnel allocation calculations use actual ticks
+            stock["price"] = live_price
+
+        # --- STEP 2: STRATEGIC WEIGHT CALCULATIONS ---
         raw_weights = []
         for stock in target_stocks:
             beta = stock.get("beta", 1.0)
             sector = stock.get("sector", "").lower()
             
-            # --- Strategic Weight Adjustments ---
+            # Strategic Weight Adjustments
             if risk_profile == "conservative":
                 # Favor lower-volatility assets heavily
                 weight_factor = 1.0 / max(beta, 0.05)
@@ -40,9 +55,12 @@ class PortfolioOptimizerService:
         portfolio_beta = 0.0
         portfolio_expected_return = 0.0
 
+        # --- STEP 3: EXECUTE CAPITAL DEPLOYMENT ---
         for i, stock in enumerate(target_stocks):
             weight = normalized_weights[i]
             allocated_funds = total_capital * weight
+            
+            # Using the fresh real-time spot price tick pulled from your API code above
             share_price = stock["price"]
             
             # Calculate executable whole units 

@@ -38,7 +38,8 @@ async def generate_recommendation(request: EnhancedUserRequest):
             diversification=request.diversification
         )
         
-        optimization_results = portfolio_optimizer_service.calculate_allocation(
+        # CRITICAL UPDATE: 'await' added here to halt processing until real-time network calculations complete
+        optimization_results = await portfolio_optimizer_service.calculate_allocation(
             total_capital=parsed_profile.investment_amount,
             target_stocks=recommended_stocks,
             risk_profile=active_risk
