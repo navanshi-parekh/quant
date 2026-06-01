@@ -5,11 +5,18 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ['recharts']
+    include: ['recharts', 'prop-types', 'react-resize-detector']
   },
   build: {
-    commonjsOptions: {
-      include: [/recharts/, /node_modules/]
+    outDir: 'dist',
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          charts: ['recharts']
+        }
+      }
     }
   }
 })
