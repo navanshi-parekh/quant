@@ -11,7 +11,7 @@ function App() {
   const [amount, setAmount] = useState(75000);
   const [horizon, setHorizon] = useState(2);
   const [riskProfile, setRiskProfile] = useState('moderate');
-  const [selectedSectors, setSelectedSectors] = useState(['Technology', 'Energy']);
+  const [selectedSectors, setSelectedSectors] = useState(['Technology', 'Energy', 'Finance', 'Commodities']);
 
   // Advanced Strategy States
   const [diversification, setDiversification] = useState('balanced');
@@ -28,12 +28,13 @@ function App() {
     }
   };
 
-  const executePipelineRequest = async (payloadPrompt, selectedMarket) => {
+  const executePipelineRequest = async (payloadPrompt, selectedMarket, activeSectors) => {
     setLoading(true);
     setError(null);
     setData(null);
 
-    const backendBaseUrl = process.env.REACT_APP_BACKEND_URL || 'http://127.0.0.1:8000';
+    // FIXED: Upgraded from process.env to import.meta.env to support Vite's compilation architecture
+    const backendBaseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
     try {
       const response = await fetch(`${backendBaseUrl}/api/generate-recommendation`, {
@@ -44,7 +45,8 @@ function App() {
           market: selectedMarket,
           diversification: diversification,
           horizon_strategy: horizonStrategy,
-          target_profit_percentage: Number(targetProfit)
+          target_profit_percentage: Number(targetProfit),
+          sectors: activeSectors // FIXED: Now forwards chosen sector targets down to the server framework
         }),
       });
       if (!response.ok) throw new Error('Internal validation processing fault over backend endpoints.');
@@ -62,13 +64,14 @@ function App() {
     const currency = market === 'american' ? 'USD' : 'INR';
     const sectorsToPass = selectedSectors.length > 0 ? selectedSectors : ['Technology'];
     const synthesizedPrompt = `Deploy exactly ${amount} ${currency} for a horizon of ${horizon} years directly into the following sectors: ${sectorsToPass.join(', ')}. Strategy is ${horizonStrategy} aiming for a risk profile of ${riskProfile}.`;
-    executePipelineRequest(synthesizedPrompt, market);
+    executePipelineRequest(synthesizedPrompt, market, sectorsToPass);
   };
 
   const handlePromptSubmit = (e) => {
     e.preventDefault();
     if (!prompt.trim()) return;
-    executePipelineRequest(prompt, market);
+    const sectorsToPass = selectedSectors.length > 0 ? selectedSectors : ['Technology'];
+    executePipelineRequest(prompt, market, sectorsToPass);
   };
 
   const getRiskColor = (risk) => {
