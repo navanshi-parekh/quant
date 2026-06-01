@@ -12,9 +12,10 @@ export default defineConfig({
     minify: 'esbuild',
     rollupOptions: {
       output: {
+        // FIXED: Static object dictionary map instead of an execution function to satisfy the compiler
         manualChunks: {
-          vendor: ['react', 'react-dom'],
-          charts: ['recharts']
+          'react-vendor': ['react', 'react-dom'],
+          'chart-vendor': ['recharts', 'prop-types', 'react-resize-detector']
         }
       }
     }
