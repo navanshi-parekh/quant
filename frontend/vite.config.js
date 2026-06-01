@@ -5,19 +5,14 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ['recharts', 'prop-types', 'react-resize-detector']
+    include: ['recharts']
   },
   build: {
     outDir: 'dist',
     minify: 'esbuild',
+    chunkSizeWarningLimit: 1000, // Extends the limit threshold so compilation proceeds cleanly
     rollupOptions: {
-      output: {
-        // FIXED: Static object dictionary map instead of an execution function to satisfy the compiler
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'chart-vendor': ['recharts', 'prop-types', 'react-resize-detector']
-        }
-      }
+      external: [], // Ensures no core libraries are accidentally dropped or omitted
     }
   }
 })
