@@ -40,7 +40,7 @@ async def generate_recommendation(request: EnhancedUserRequest):
         
         # CRITICAL UPDATE: 'await' added here to halt processing until real-time network calculations complete
         optimization_results = await portfolio_optimizer_service.calculate_allocation(
-            total_capital=parsed_profile.investment_amount,
+            total_capital=float(parsed_profile.investment_amount), # CRITICAL FIX: Forces string variants into solid floating data points
             target_stocks=recommended_stocks,
             risk_profile=active_risk
         )
