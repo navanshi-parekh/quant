@@ -93,13 +93,57 @@ function App() {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
   };
 
+  // Helper utility to cleanly parse out markdown stars and build individual intelligence segments
+  const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
+    if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
+    
+    return rawText.split('\n').map((paragraph, idx) => {
+      if (!paragraph.trim()) return null;
+      
+      const cleanText = paragraph.replace(/\*\*/g, '');
+      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk'));
+      const isBulletStep = cleanText.trim().startsWith('-') || cleanText.trim().startsWith('*') || /^\d+\./.test(cleanText.trim());
+
+      if (isHeaderLine) {
+        const [title, description] = cleanText.split(/:(.+)/);
+        return (
+          <div key={idx} style={{...styles.intelligenceCard, borderLeft: `3px solid ${accentColor}`}}>
+            <div style={{...styles.intelligenceCardHeader, color: accentColor}}>
+              <span style={{...styles.intelligenceIndicatorDot, backgroundColor: accentColor}}></span>
+              <strong>{title.trim()}</strong>
+              <span style={{...styles.briefBadge, color: accentColor, borderColor: accentColor, backgroundColor: `${accentColor}10`}}>{badgeLabel}</span>
+            </div>
+            {description && <p style={{fontSize: '12px', color: '#cbd5e1', marginTop: '6px', margin: 0, lineHeight: '1.5'}}>{description.trim()}</p>}
+          </div>
+        );
+      }
+
+      if (isBulletStep) {
+        const lineContent = cleanText.replace(/^[\s\-\*\d\.]\s*/, '');
+        return (
+          <div key={idx} style={{...styles.executionStepRow, borderLeft: `3px solid ${accentColor}`}}>
+            <div style={{...styles.executionStepNumber, color: accentColor, borderColor: accentColor, backgroundColor: `${accentColor}10`}}>✓</div>
+            <div style={{fontSize: '12px', color: '#e2e8f0', lineHeight: '1.5'}}>{lineContent}</div>
+          </div>
+        );
+      }
+
+      return (
+        <div key={idx} style={styles.narrativeParagraphBlock}>
+          <p style={{margin: 0, fontSize: '12px', color: '#94a3b8', lineHeight: '1.6', textAlign: 'justify'}}>{cleanText}</p>
+        </div>
+      );
+    });
+  };
+
   return (
     <div style={styles.container}>
       <style>{`
-        @media (max-width: 900px) {
+        @media (max-width: 1100px) {
           .input-layout-responsive { grid-template-columns: 1fr !important; }
           .grid-2col-responsive { grid-template-columns: 1fr !important; }
           .header-responsive { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
+          .adversarial-grid-responsive { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -268,7 +312,7 @@ function App() {
               </div>
             </div>
 
-            {/* Backtest Trajectory Map - FIXED WITH FLUID RECHARTS VECTOR GRIDS */}
+            {/* Backtest Trajectory Map */}
             {data.backtest_trajectory && data.backtest_trajectory.length > 0 && (
               <section style={{...styles.card, marginBottom: '24px', border: '1px solid #1f242e'}}>
                 <h3 style={styles.cardTitle}>📈 Portfolio Growth Engine Timeline Forecast</h3>
@@ -314,99 +358,75 @@ function App() {
               </section>
             )}
 
-            {/* Matrix Data Grids */}
-            <div style={styles.dashboardLayout}>
-              <div style={styles.fullWidthCard}>
-                <div style={styles.card}>
-                  <h3 style={styles.cardTitle}>📊 Optimal Asset Matrix & Fundamental Screener</h3>
-                  <div style={styles.tableWrapper}>
-                    <table style={styles.table}>
-                      <thead>
-                        <tr>
-                          <th style={styles.th}>SYMBOL</th>
-                          <th style={styles.th}>PRICE</th>
-                          <th style={styles.th}>VOLATILITY (BETA)</th>
-                          <th style={styles.th}>P/E RATIO</th>
-                          <th style={styles.th}>DIV YIELD</th>
-                          <th style={styles.th}>WEIGHT</th>
-                          <th style={styles.th}>SHARES</th>
-                          <th style={styles.th}>NET SPENT</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.optimized_portfolio.map((asset, idx) => {
-                          const betaValue = asset.beta || 0;
-                          const peValue = asset.pe_ratio || 0;
-                          return (
-                            <tr key={idx} style={styles.tr}>
-                              <td style={styles.td}>
-                                <span style={styles.tickerBadge}>{asset.symbol}</span>
-                                {checkIsOvervalued(peValue) && (
-                                  <span style={styles.valuationAlertTag}>⚠️ OVERVALUED</span>
-                                )}
-                              </td>
-                              <td style={styles.td}>{currencySymbol}{(asset.current_price || 0).toLocaleString('en-IN')}</td>
-                              <td style={{...styles.td, color: getRiskColor(betaValue > 1.1 ? 'aggressive' : betaValue >= 0.85 ? 'moderate' : 'conservative')}}>
-                                β {betaValue}
-                              </td>
-                              <td style={styles.td}>{peValue > 0 ? peValue : 'N/A'}</td>
-                              <td style={{...styles.td, color: '#34d399'}}>{asset.dividend_yield || 0}%</td>
-                              <td style={styles.td}>{asset.allocation_percentage || 0}%</td>
-                              <td style={styles.td}><strong style={styles.shareCount}>{asset.suggested_shares_to_buy || 0}</strong></td>
-                              <td style={styles.td}>{currencySymbol}{(asset.actual_deployment_cost || 0).toLocaleString('en-IN')}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-
-              <div style={styles.fullWidthCard}>
-                <div style={styles.card}>
-                  <h3 style={styles.cardTitle}>⚡ Executive Briefing & Strategy Intelligence</h3>
-                  <div style={styles.reportBlock}>
-                    {data.report && data.report.split('\n').map((paragraph, index) => {
-                      if (!paragraph.trim()) return null;
-                      
-                      const cleanText = paragraph.replace(/\*\*/g, '');
-                      const isAssetAllocationLine = cleanText.includes(':') && (cleanText.includes('shares') || cleanText.includes('%') || cleanText.includes('ETF'));
-                      const isExecutionStep = /^\d+\./.test(cleanText.trim()) || cleanText.toLowerCase().includes('step');
-
-                      if (isAssetAllocationLine) {
-                        const [title, description] = cleanText.split(/:(.+)/);
+            {/* Asset Matrix Spreadsheet Card */}
+            <div style={{marginBottom: '24px'}}>
+              <div style={styles.card}>
+                <h3 style={styles.cardTitle}>📊 Optimal Asset Matrix & Fundamental Screener</h3>
+                <div style={styles.tableWrapper}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.th}>SYMBOL</th>
+                        <th style={styles.th}>PRICE</th>
+                        <th style={styles.th}>VOLATILITY (BETA)</th>
+                        <th style={styles.th}>P/E RATIO</th>
+                        <th style={styles.th}>DIV YIELD</th>
+                        <th style={styles.th}>WEIGHT</th>
+                        <th style={styles.th}>SHARES</th>
+                        <th style={styles.th}>NET SPENT</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.optimized_portfolio.map((asset, idx) => {
+                        const betaValue = asset.beta || 0;
+                        const peValue = asset.pe_ratio || 0;
                         return (
-                          <div key={index} style={styles.intelligenceCard}>
-                            <div style={styles.intelligenceCardHeader}>
-                              <span style={styles.intelligenceIndicatorDot}></span>
-                              <strong>{title.trim()}</strong>
-                              <span style={styles.briefBadge}>TACTICAL CONVICTION</span>
-                            </div>
-                            <p style={{fontSize: '12px', color: '#cbd5e1', marginTop: '6px', margin: 0, lineHeight: '1.5'}}>{description ? description.trim() : ''}</p>
-                          </div>
+                          <tr key={idx} style={styles.tr}>
+                            <td style={styles.td}>
+                              <span style={styles.tickerBadge}>{asset.symbol}</span>
+                              {checkIsOvervalued(peValue) && (
+                                <span style={styles.valuationAlertTag}>⚠️ OVERVALUED</span>
+                              )}
+                            </td>
+                            <td style={styles.td}>{currencySymbol}{(asset.current_price || 0).toLocaleString('en-IN')}</td>
+                            <td style={{...styles.td, color: getRiskColor(betaValue > 1.1 ? 'aggressive' : betaValue >= 0.85 ? 'moderate' : 'conservative')}}>
+                              β {betaValue}
+                            </td>
+                            <td style={styles.td}>{peValue > 0 ? peValue : 'N/A'}</td>
+                            <td style={{...styles.td, color: '#34d399'}}>{asset.dividend_yield || 0}%</td>
+                            <td style={styles.td}>{asset.allocation_percentage || 0}%</td>
+                            <td style={styles.td}><strong style={styles.shareCount}>{asset.suggested_shares_to_buy || 0}</strong></td>
+                            <td style={styles.td}>{currencySymbol}{(asset.actual_deployment_cost || 0).toLocaleString('en-IN')}</td>
+                          </tr>
                         );
-                      }
-
-                      if (isExecutionStep) {
-                        return (
-                          <div key={index} style={styles.executionStepRow}>
-                            <div style={styles.executionStepNumber}>✓</div>
-                            <div style={{fontSize: '12px', color: '#e2e8f0', lineHeight: '1.5'}}>{cleanText}</div>
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div key={index} style={styles.narrativeParagraphBlock}>
-                          <p style={{margin: 0, fontSize: '12px', color: '#94a3b8', lineHeight: '1.6', textAlign: 'justify'}}>{cleanText}</p>
-                        </div>
-                      );
-                    })}
-                  </div>
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
+
+            {/* PHASE 3 INTEGRATION: ADVERSARIAL AGENT INTELLIGENCE SIDE-BY-SIDE PANELS */}
+            <div style={styles.adversarialGrid} className="adversarial-grid-responsive">
+              <div style={styles.card}>
+                <h3 style={{...styles.cardTitle, color: '#34d399', borderBottom: '1px solid rgba(52,211,153,0.2)'}}>
+                  🟢 BULL CASE ANALYST: GROWTH CONVICTION
+                </h3>
+                <div style={styles.reportBlock}>
+                  {renderIntelligenceBlock(data.report_bull, '#34d399', 'BULL STRATEGY')}
+                </div>
+              </div>
+
+              <div style={styles.card}>
+                <h3 style={{...styles.cardTitle, color: '#ef4444', borderBottom: '1px solid rgba(239,68,68,0.2)'}}>
+                  🔴 BEAR CASE ANALYST: RISK & HEADWINDS
+                </h3>
+                <div style={styles.reportBlock}>
+                  {renderIntelligenceBlock(data.report_bear, '#ef4444', 'RISK MITIGATION')}
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
       </main>
@@ -444,17 +464,15 @@ const styles = {
   educationalCard: { backgroundColor: '#0b1324', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px' },
   educationalText: { fontSize: '12px', color: '#94a3b8', lineHeight: '1.6', marginTop: '4px' },
   macroTelemetryGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: '12px', marginTop: '8px' },
-  errorCard: { backgroundColor: 'rgba(248,81,73,0.1)', border: '1px solid #f85149', borderRadius: '8px', color: '#f85149', padding: '14px', marginBottom: '24px', fontSize: '13px' },
+  errorCard: { rgba(248,81,73,0.1)': '#0d111a', border: '1px solid #f85149', borderRadius: '8px', color: '#f85149', padding: '14px', marginBottom: '24px', fontSize: '13px', backgroundColor: 'rgba(248,81,73,0.07)' },
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' },
   kpiCard: { backgroundColor: '#0d111a', border: '1px solid #1f242e', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '6px' },
   kpiLabel: { color: '#8b949e', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.6px' },
   kpiValue: { fontSize: '20px', fontWeight: '800' },
   chartExplanationBox: { backgroundColor: '#141b2e', border: '1px solid #23355c', borderRadius: '8px', padding: '14px', marginTop: '20px' },
-  dashboardLayout: { display: 'flex', flexDirection: 'column', gap: '24px' },
-  fullWidthCard: { width: '100%' },
   card: { backgroundColor: '#0d111a', border: '1px solid #1f242e', borderRadius: '12px', padding: '24px' },
-  cardTitle: { color: '#e6edf3', fontSize: '14px', fontWeight: 'bold', borderBottom: '1px solid #1f242e', paddingBottom: '12px', marginBottom: '16px', textTransform: 'uppercase' },
-  tableWrapper: { overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch' },
+  cardTitle: { color: '#e6edf3', fontSize: '14px', fontWeight: 'bold', borderBottom: '1px solid #1f242e', paddingBottom: '12px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' },
+  tableWrapper: { overflowX: 'auto', width: '100%' },
   table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px', minWidth: '600px' },
   th: { borderBottom: '2px solid #1f242e', padding: '12px 10px', color: '#8b949e', fontWeight: '700' },
   tr: { borderBottom: '1px solid #161b26' },
@@ -462,13 +480,14 @@ const styles = {
   tickerBadge: { backgroundColor: '#1c2333', border: '1px solid #2d3545', borderRadius: '6px', padding: '5px 10px', fontWeight: 'bold', color: '#e6edf3' },
   shareCount: { color: '#10b981', fontSize: '15px', fontWeight: '700' },
   valuationAlertTag: { marginLeft: '8px', backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', color: '#ef4444', fontSize: '9px', padding: '2px 4px', borderRadius: '4px', fontWeight: 'bold' },
-  reportBlock: { display: 'flex', flexDirection: 'column', gap: '14px', maxHeight: 'none', overflowY: 'visible' },
+  adversarialGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' },
+  reportBlock: { display: 'flex', flexDirection: 'column', gap: '14px' },
   intelligenceCard: { backgroundColor: '#131924', border: '1px solid #1e293b', borderRadius: '8px', padding: '14px', position: 'relative' },
-  intelligenceCardHeader: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#38bdf8', borderBottom: '1px solid #1e293b', paddingBottom: '6px', marginBottom: '6px' },
-  intelligenceIndicatorDot: { width: '6px', height: '6px', backgroundColor: '#38bdf8', borderRadius: '50%' },
-  briefBadge: { marginLeft: 'auto', fontSize: '9px', backgroundColor: 'rgba(56,189,248,0.1)', border: '1px solid #38bdf8', padding: '1px 5px', borderRadius: '3px', fontWeight: 'bold', color: '#38bdf8' },
-  executionStepRow: { display: 'flex', gap: '12px', alignItems: 'flex-start', backgroundColor: '#0f172a', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #10b981' },
-  executionStepNumber: { backgroundColor: 'rgba(16,185,129,0.1)', border: '1px solid #10b981', color: '#10b981', width: '18px', height: '18px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', flexShrink: 0, fontWeight: 'bold' },
+  intelligenceCardHeader: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', borderBottom: '1px solid #1e293b', paddingBottom: '6px', marginBottom: '6px' },
+  intelligenceIndicatorDot: { width: '6px', height: '6px', borderRadius: '50%' },
+  briefBadge: { marginLeft: 'auto', fontSize: '9px', border: '1px solid', padding: '1px 5px', borderRadius: '3px', fontWeight: 'bold' },
+  executionStepRow: { display: 'flex', gap: '12px', alignItems: 'flex-start', backgroundColor: '#0f172a', padding: '12px', borderRadius: '8px' },
+  executionStepNumber: { border: '1px solid', width: '18px', height: '18px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', flexShrink: 0, fontWeight: 'bold' },
   narrativeParagraphBlock: { padding: '0 4px' }
 };
 
