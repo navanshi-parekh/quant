@@ -45,8 +45,8 @@ function App() {
 
   const removeAttachedFile = () => {
     setAttachedFile(null);
-    setData(null);   // CRITICAL FIX: Wipes the data payload cache so the UI resets back to Stock Mode instantly
-    setPrompt('');   // Optional: Clears the text box for a fresh slate
+    setData(null);   // Wipes the data payload cache so the UI resets back to Stock Mode instantly
+    setPrompt('');   // Clears the text box for a fresh slate
   };
 
   // CORE NETWORK CONTROLLER: Standardized transmission architecture ensuring form payloads map smoothly via multipart FormData
@@ -81,7 +81,9 @@ function App() {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ detail: 'Backend generation fault.' }));
-        throw new Error(errorData.detail || 'Internal processing breakdown across endpoints.');
+        // Format layout output strings safely to present nested pydantic arrays elegantly if a fault occurs
+        const rawErrorMsg = errorData.detail ? (typeof errorData.detail === 'object' ? JSON.stringify(errorData.detail) : String(errorData.detail)) : 'Internal processing breakdown across endpoints.';
+        throw new Error(rawErrorMsg);
       }
       
       const result = await response.json();
@@ -98,7 +100,6 @@ function App() {
     const currency = market === 'american' ? 'USD' : 'INR';
     const sectorsToPass = selectedSectors.length > 0 ? selectedSectors : ['Technology'];
     
-    // Explicit structural sentence configuration to ensure regex matches pass smoothly
     const synthesizedPrompt = `Allocate exactly ${amount} ${currency} for an investment window of ${horizon} years directly into the following sector matrix: ${sectorsToPass.join(', ')}. Strategy profile is ${horizonStrategy} targeting a risk matrix configuration of ${riskProfile}.`;
     executePipelineRequest(synthesizedPrompt, market, sectorsToPass);
   };
@@ -111,11 +112,15 @@ function App() {
     let structuredPrompt = prompt.trim();
     if (!structuredPrompt && !attachedFile) return;
 
-    // Direct automated instruction fallback string formulation if a raw text prompt lacks integers
-    if (structuredPrompt && !structuredPrompt.includes(String(amount)) && !structuredPrompt.toLowerCase().includes('years')) {
-      structuredPrompt += ` [Constraint Metadata Base Configuration Override: Deploy exactly ${amount} ${currency} over ${horizon} years]`;
+    // HARDENED STRUCTURAL SYSTEM PROMPT FORMULATION: Ensures Pydantic schema validation variables are always fully satisfied on backend entry
+    const constraintMetadataFallback = `[System Profile Schema Alignment Parameters -> Allocation Capital amount: ${amount} ${currency}, Time Horizon window: ${horizon} years, Active Target profile: ${riskProfile}, Sectors target list matrix: ${sectorsToPass.join(', ')}]`;
+
+    if (structuredPrompt) {
+      if (!structuredPrompt.includes(String(amount)) && !structuredPrompt.toLowerCase().includes('years')) {
+        structuredPrompt += ` ${constraintMetadataFallback}`;
+      }
     } else if (!structuredPrompt && attachedFile) {
-      structuredPrompt = `Perform an isolated, multi-perspective financial audit and context extraction for the attached file: ${attachedFile.name}`;
+      structuredPrompt = `Perform an independent context audit summary extraction tracking for corporate filing data report: ${attachedFile.name}. Base backup parameters config: ${constraintMetadataFallback}`;
     }
 
     executePipelineRequest(structuredPrompt, market, sectorsToPass);
@@ -137,7 +142,6 @@ function App() {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
   };
 
-  // PARSING ENGINE: Seamless key-value flattening ensures nested JSON strings or objects unpack cleanly without crashes
   const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
     if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
     
@@ -222,7 +226,7 @@ function App() {
           <button type="button" style={{...styles.marketTab, ...(market === 'american' ? styles.activeMarketTab : {})}} onClick={() => { setMarket('american'); setAmount(5000); setData(null); }}>🇺🇸 US DESK</button>
         </div>
 
-        {/* THREE-COLUMN COMPLIANT INPUT WORKSPACE */}
+        {/* THREE-COLUMN INPUT WORKSPACE AREA */}
         <div style={styles.mainWorkspaceLayout} className="main-workspace-layout">
           
           {/* Column 1: AI Prompt Submissions */}
@@ -362,7 +366,7 @@ function App() {
         <div style={styles.splitTelemetryRow}>
           <section style={{...styles.educationalCard, margin: 0, flex: 1.2}}>
             <h3 style={styles.cardTitle}>🧠 Sharpe Ratio Core Metric: Risk-Adjusted Return Performance</h3>
-            <p style={styles.educationalText}>
+            <p style={{...styles.educationalText, margin: 0}}>
               The **Sharpe Ratio** tracks excess returns relative to the portfolio's volatility parameters. Higher metrics (&gt;1.5) indicate capital allocation alpha generation.
             </p>
           </section>
@@ -474,11 +478,15 @@ function App() {
 
                 <div style={styles.adversarialGrid} className="adversarial-grid-responsive">
                   <div style={styles.card}>
-                    <h3 style={{...styles.cardTitle, color: '#34d399', borderBottom: '1px solid rgba(52,211,153,0.2)'}}>🟢 BULL CASE ANALYST: MARKET ASSET CONVICTION</h3>
+                    <h3 style={{...styles.cardTitle, color: '#34d399', borderBottom: '1px solid rgba(52,211,153,0.2)'}}>
+                      🟢 BULL CASE ANALYST: MARKET ASSET CONVICTION
+                    </h3>
                     <div style={styles.reportBlock}>{renderIntelligenceBlock(data.report_bull, '#34d399', 'PORTFOLIO BULL')}</div>
                   </div>
                   <div style={styles.card}>
-                    <h3 style={{...styles.cardTitle, color: '#ef4444', borderBottom: '1px solid rgba(239,68,68,0.2)'}}>🔴 BEAR CASE ANALYST: PORTFOLIO EXPOSURE HAZARDS</h3>
+                    <h3 style={{...styles.cardTitle, color: '#ef4444', borderBottom: '1px solid rgba(239,68,68,0.2)'}}>
+                      🔴 BEAR CASE ANALYST: PORTFOLIO EXPOSURE HAZARDS
+                    </h3>
                     <div style={styles.reportBlock}>{renderIntelligenceBlock(data.report_bear, '#ef4444', 'PORTFOLIO BEAR')}</div>
                   </div>
                 </div>
@@ -536,7 +544,6 @@ const styles = {
   marketTab: { flex: 1, backgroundColor: 'transparent', border: 'none', color: '#8b949e', padding: '12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s' },
   activeMarketTab: { backgroundColor: '#1c2333', color: '#58a6ff', border: '1px solid #2d3545' },
   
-  // THREE-COLUMN ASSIGNMENT GRID STYLINGS
   mainWorkspaceLayout: { display: 'grid', gridTemplateColumns: '1fr 1.1fr 0.9fr', gap: '24px', marginBottom: '24px' },
   controlCard: { backgroundColor: '#0d111a', border: '1px solid #1f242e', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' },
   sectionHeader: { fontSize: '13px', color: '#8b949e', textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '1px', borderBottom: '1px solid #1f242e', paddingBottom: '8px', fontWeight: '700' },
@@ -545,7 +552,6 @@ const styles = {
   grid2Col: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
   textarea: { backgroundColor: '#141822', border: '1px solid #2d3545', borderRadius: '8px', color: '#e6edf3', padding: '16px', fontSize: '13px', minHeight: '130px', resize: 'none', outline: 'none', lineHeight: '1.6', fontFamily: 'inherit' },
   
-  // MODULAR FILE BOX DISPLAY
   separatedUploaderLayout: { display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'flex-start' },
   pdfDropZone: { border: '1px dashed #2d3545', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' },
   pdfLabelUpload: { fontSize: '11px', color: '#8b949e', cursor: 'pointer', display: 'block', lineHeight: '1.4' },
@@ -554,7 +560,6 @@ const styles = {
   activeUploaderStatusBadge: { marginTop: '14px', alignSelf: 'center', backgroundColor: 'rgba(56,189,248,0.06)', border: '1px solid #1e293b', color: '#38bdf8', borderRadius: '20px', padding: '5px 12px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' },
   uploaderPulseDot: { width: '6px', height: '6px', backgroundColor: '#38bdf8', borderRadius: '50%', display: 'inline-block' },
   
-  // REPORT SEPARATION FLEX TARGETS
   ragDisplayGridResp: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },
   ragExtractSubPane: { backgroundColor: '#0c1220', border: '1px solid #1e293b', padding: '20px', borderRadius: '8px' },
 
@@ -568,7 +573,7 @@ const styles = {
   checkbox: { cursor: 'pointer', accentColor: '#0284c7' },
   splitTelemetryRow: { display: 'flex', gap: '24px', alignItems: 'stretch', flexWrap: 'wrap', marginBottom: '24px' },
   educationalCard: { backgroundColor: '#0b1324', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px' },
-  educationalText: { fontSize: '12px', color: '#94a3b8', lineHeight: '1.6', marginTop: '4px' },
+  educationalText: { fontSize: '12px', color: '#94a3b8', lineHeight: '1.6' },
   macroTelemetryGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: '12px', marginTop: '8px' },
   errorCard: { border: '1px solid #f85149', borderRadius: '8px', color: '#f85149', padding: '14px', marginBottom: '24px', fontSize: '13px', backgroundColor: 'rgba(248,81,73,0.07)' },
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' },
