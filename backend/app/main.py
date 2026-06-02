@@ -80,12 +80,14 @@ async def generate_recommendation(request: EnhancedUserRequest):
         target_growth_multiplier = 1 + (request.target_profit_percentage / 100.0)
         target_profit_milestone = total_spent * target_growth_multiplier
 
-        generated_narrative = llm_synthesizer_service.generate_report(
+        # Executes multi-agent adversarial synthesis parsing via updated dual-agent dictionary output
+        adversarial_briefings = llm_synthesizer_service.generate_report(
             profile={
                 "investment_amount": parsed_profile.investment_amount,
                 "time_horizon_years": parsed_profile.time_horizon_years,
                 "sectors": parsed_profile.sectors,
-                "risk_profile": active_risk
+                "risk_profile": active_risk,
+                "market": request.market
             },
             portfolio=optimized_allocation,
             unallocated_cash=leftover_cash
@@ -107,8 +109,8 @@ async def generate_recommendation(request: EnhancedUserRequest):
             "unallocated_cash": round(leftover_cash, 2),
             "portfolio_beta": optimization_results["portfolio_beta"],
             "expected_portfolio_return": optimization_results["expected_portfolio_return"],
-            "sharpe_ratio": optimization_results.get("sharpe_ratio", 0.0),            # PHASE 1 INTEGRATION
-            "risk_free_rate": optimization_results.get("risk_free_rate_meta", 6.75),  # PHASE 1 INTEGRATION
+            "sharpe_ratio": optimization_results.get("sharpe_ratio", 0.0),            
+            "risk_free_rate": optimization_results.get("risk_free_rate_meta", 6.75),  
             "backtest_trajectory": trajectory,
             "market_macro": {
                 "index_name": index_name,
@@ -116,7 +118,9 @@ async def generate_recommendation(request: EnhancedUserRequest):
                 "index_pe": index_pe,
                 "portfolio_avg_pe": portfolio_avg_pe
             },
-            "report": generated_narrative
+            # Dual Adversarial Intelligence Output Payloads mapped out downstream
+            "report_bull": adversarial_briefings.get("bull_case", ""),
+            "report_bear": adversarial_briefings.get("bear_case", "")
         }
         
     except Exception as e:
