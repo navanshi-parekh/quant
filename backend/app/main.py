@@ -1,7 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+from pypdf import PdfReader
+import io
+
 from app.services.llm_parser import llm_parser_service
 from app.services.financial_api import financial_api_service
 from app.services.optimizer import portfolio_optimizer_service
@@ -18,27 +21,48 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class EnhancedUserRequest(BaseModel):
-    prompt: str
-    market: str = "indian"
-    diversification: str = "balanced"
-    horizon_strategy: str = "long_term"
-    target_profit_percentage: float = 15.0
-
 @app.post("/api/generate-recommendation")
-async def generate_recommendation(request: EnhancedUserRequest):
+async def generate_recommendation(
+    prompt: str = Form(...),
+    market: str = Form("indian"),
+    diversification: str = Form("balanced"),
+    horizon_strategy: str = Form("long_term"),
+    target_profit_percentage: float = Form(15.0),
+    file: Optional[UploadFile] = File(None)
+):
     try:
-        parsed_profile = llm_parser_service.parse_prompt(request.prompt)
-        active_risk = "conservative" if request.horizon_strategy == "short_term" else parsed_profile.risk_profile
+        # --- PHASE 4 EXTRACTION LAYER ---
+        pdf_text_context = None
+        if file and file.filename.endswith('.pdf'):
+            try:
+                # Read PDF binary directly from multi-part memory buffers stream
+                pdf_contents = await file.read()
+                pdf_reader = PdfReader(io.BytesIO(pdf_contents))
+                
+                extracted_pages = []
+                # Extract text up to the first 5 pages to stay safely within Groq chunk window sizes
+                max_pages = min(len(pdf_reader.pages), 5)
+                for page_num in range(max_pages):
+                    page_text = pdf_reader.pages[page_num].extract_text()
+                    if page_text:
+                        extracted_pages.append(page_text)
+                
+                if extracted_pages:
+                    pdf_text_context = "\n".join(extracted_pages)
+            except Exception as pdf_err:
+                print(f"Non-breaking PDF parsing anomaly intercepted: {pdf_err}")
+
+        # --- CORE MATHEMATICAL OPTIMIZATION PIPELINE ---
+        parsed_profile = llm_parser_service.parse_prompt(prompt)
+        active_risk = "conservative" if horizon_strategy == "short_term" else parsed_profile.risk_profile
         
         recommended_stocks = financial_api_service.get_recommendations(
             sectors=parsed_profile.sectors,
             risk_profile=active_risk,
-            market=request.market,
-            diversification=request.diversification
+            market=market,
+            diversification=diversification
         )
         
-        # Executes mathematical portfolio distribution checks via our upgraded async optimizer
         optimization_results = await portfolio_optimizer_service.calculate_allocation(
             total_capital=float(parsed_profile.investment_amount),
             target_stocks=recommended_stocks,
@@ -49,8 +73,7 @@ async def generate_recommendation(request: EnhancedUserRequest):
         total_spent = sum(item["actual_deployment_cost"] for item in optimized_allocation)
         leftover_cash = parsed_profile.investment_amount - total_spent
         
-        # Calculate market average PE and index price point telemetry metrics dynamically
-        if request.market == "indian":
+        if market == "indian":
             index_name = "Nifty 50"
             index_price = 23547.75
             index_pe = 20.58
@@ -59,7 +82,6 @@ async def generate_recommendation(request: EnhancedUserRequest):
             index_price = 5240.50
             index_pe = 24.80
 
-        # Calculate portfolio average PE for assets that have a valid PE multiple
         valid_pes = [item["pe_ratio"] for item in optimized_allocation if item.get("pe_ratio", 0) > 0]
         portfolio_avg_pe = round(sum(valid_pes) / len(valid_pes), 2) if valid_pes else 0.0
 
@@ -77,20 +99,21 @@ async def generate_recommendation(request: EnhancedUserRequest):
             })
             current_value *= (1 + monthly_rate)
 
-        target_growth_multiplier = 1 + (request.target_profit_percentage / 100.0)
+        target_growth_multiplier = 1 + (target_profit_percentage / 100.0)
         target_profit_milestone = total_spent * target_growth_multiplier
 
-        # Executes multi-agent adversarial synthesis parsing via updated dual-agent dictionary output
+        # Executes multi-agent adversarial synthesis parsing, passing along optional PDF context
         adversarial_briefings = llm_synthesizer_service.generate_report(
             profile={
                 "investment_amount": parsed_profile.investment_amount,
                 "time_horizon_years": parsed_profile.time_horizon_years,
                 "sectors": parsed_profile.sectors,
                 "risk_profile": active_risk,
-                "market": request.market
+                "market": market
             },
             portfolio=optimized_allocation,
-            unallocated_cash=leftover_cash
+            unallocated_cash=leftover_cash,
+            pdf_context=pdf_text_context
         )
         
         return {
@@ -99,10 +122,10 @@ async def generate_recommendation(request: EnhancedUserRequest):
                 "time_horizon_years": parsed_profile.time_horizon_years,
                 "sectors": parsed_profile.sectors,
                 "risk_profile": active_risk,
-                "market": request.market,
-                "diversification": request.diversification,
-                "horizon_strategy": request.horizon_strategy,
-                "target_profit_percentage": request.target_profit_percentage,
+                "market": market,
+                "diversification": diversification,
+                "horizon_strategy": horizon_strategy,
+                "target_profit_percentage": target_profit_percentage,
                 "target_profit_milestone": round(target_profit_milestone, 2)
             },
             "optimized_portfolio": optimized_allocation,
@@ -118,7 +141,6 @@ async def generate_recommendation(request: EnhancedUserRequest):
                 "index_pe": index_pe,
                 "portfolio_avg_pe": portfolio_avg_pe
             },
-            # Dual Adversarial Intelligence Output Payloads mapped out downstream
             "report_bull": adversarial_briefings.get("bull_case", ""),
             "report_bear": adversarial_briefings.get("bear_case", "")
         }
