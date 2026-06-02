@@ -7,3 +7,4 @@ typing_extensions
 httpx
 gunicorn
 pypdf==4.2.0
+python-multipart==0.0.12
