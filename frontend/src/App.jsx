@@ -64,7 +64,7 @@ function App() {
       formDataBody.append('market', selectedMarket);
       formDataBody.append('diversification', diversification);
       formDataBody.append('horizon_strategy', horizonStrategy);
-      formDataBody.append('target_profit_percentage', Number(targetProfit));
+      formDataBody.append('target_profit_percentage', Number(targetProfit)); // FIXED: Corrected syntax to Number
       
       activeSectors.forEach((sector) => {
         formDataBody.append('sectors', sector); 
@@ -202,7 +202,6 @@ function App() {
 
   return (
     <div style={styles.container}>
-      {/* ADVANCED TERMINAL CSS DECORATOR INJECTIONS */}
       <style>{`
         @media (max-width: 1200px) {
           .main-workspace-layout { grid-template-columns: 1fr !important; }
@@ -211,13 +210,11 @@ function App() {
           .adversarial-grid-responsive { grid-template-columns: 1fr !important; }
         }
         
-        /* Premium custom native elements scrollbars */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #070a13; }
         ::-webkit-scrollbar-thumb { background: #1f293d; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
 
-        /* Neon Custom range input sliders overrides */
         input[type="range"] {
           -webkit-appearance: none;
           appearance: none;
@@ -225,7 +222,6 @@ function App() {
           height: 5px;
           border-radius: 10px;
           outline: none;
-          transition: background 0.3s;
         }
         input[type="range"]::-webkit-slider-thumb {
           -webkit-appearance: none;
@@ -242,15 +238,9 @@ function App() {
           transform: scale(1.2);
         }
 
-        /* High-tech workspace animations */
         @keyframes scanline {
           0% { transform: translateY(-100%); }
           100% { transform: translateY(100%); }
-        }
-        @keyframes gradientPulse {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
         }
         .scanning-loader {
           position: relative;
@@ -279,16 +269,14 @@ function App() {
       </header>
 
       <main style={styles.main}>
-        {/* Market Selector Desk Toggles */}
         <div style={styles.marketToggleRow}>
           <button type="button" style={{...styles.marketTab, ...(market === 'indian' ? styles.activeMarketTab : {})}} onClick={() => { setMarket('indian'); setAmount(75000); setData(null); }}>🇮🇳 INDIAN DESK</button>
           <button type="button" style={{...styles.marketTab, ...(market === 'american' ? styles.activeMarketTab : {})}} onClick={() => { setMarket('american'); setAmount(5000); setData(null); }}>🇺🇸 US DESK</button>
         </div>
 
-        {/* THREE-COLUMN WORKSPACE WITH FLOATING GLASS EFFECT */}
         <div style={styles.mainWorkspaceLayout} className="main-workspace-layout">
           
-          {/* Column 1: AI Prompt Interface */}
+          {/* Column 1 */}
           <section style={styles.controlCard}>
             <h2 style={styles.sectionHeader}>🤖 AI Prompt Interface</h2>
             <div style={styles.formStack}>
@@ -310,7 +298,7 @@ function App() {
             </div>
           </section>
 
-          {/* Column 2: Strategy Constraint Sliders */}
+          {/* Column 2 */}
           <section style={styles.controlCard}>
             <h2 style={styles.sectionHeader}>🎛️ Strategic Constraint Parameters</h2>
             <div style={styles.manualForm}>
@@ -370,7 +358,6 @@ function App() {
                 </div>
               </div>
 
-              {/* AUTOMATED WORKSPACE CONTEXT UNLOCKER SWITCH */}
               {!attachedFile ? (
                 <button 
                   type="button" 
@@ -392,7 +379,7 @@ function App() {
             </div>
           </section>
 
-          {/* Column 3: Isolated Context Upload Desk */}
+          {/* Column 3 */}
           <section style={{...styles.controlCard, borderColor: attachedFile ? '#38bdf835' : 'rgba(255, 255, 255, 0.05)'}}>
             <h2 style={{...styles.sectionHeader, color: attachedFile ? '#38bdf8' : '#8b949e'}}>📑 Isolated Context Auditing Workspace</h2>
             <div style={styles.separatedUploaderLayout}>
@@ -432,7 +419,6 @@ function App() {
 
         </div>
 
-        {/* HIGH TECH PROGRESS DIAGNOSTIC LOADER BAR SCANNER */}
         {loading && (
           <div style={styles.loadingContainerTrack}>
             <div style={styles.loadingBarProgressFilled} className="scanning-loader"></div>
@@ -442,22 +428,21 @@ function App() {
           </div>
         )}
 
-        {/* Sharpe Telemetry Explainer */}
         <div style={styles.splitTelemetryRow}>
-          <section style={{...styles.educationalCard, flex: 1.2}}>
+          <section style={styles.educationalCard}>
             <h3 style={styles.cardTitle}>🧠 Sharpe Ratio Core Metric: Risk-Adjusted Return Performance</h3>
             <p style={styles.educationalText}>
-              The **Sharpe Ratio** tracks excess returns relative to the portfolio's underlying mathematical volatility parameters. Higher metrics (&gt;1.5) indicate the current configuration is generating structural institutional alpha.
+              The **Sharpe Ratio** tracks excess returns relative to the portfolio's underlying mathematical volatility parameters. Higher metrics (&gt;1.5) indicate alpha generation.
             </p>
           </section>
 
           {data && data.market_macro && !attachedFile && (
-            <section style={{...styles.educationalCard, flex: 1, borderLeft: '4px solid #38bdf8', background: 'linear-gradient(135deg, #0b162a 0%, #0d111a 100%)'}}>
+            <section style={{...styles.educationalCard, borderLeft: '4px solid #38bdf8', background: 'linear-gradient(135deg, #0b162a 0%, #0d111a 100%)'}}>
               <h3 style={styles.cardTitle}>🌐 {data.market_macro.index_name} Index Macro Telemetry</h3>
               <div style={styles.macroTelemetryGrid}>
                 <div>
                   <div style={{fontSize: '10px', color: '#8b949e'}}>INDEX PRICE</div>
-                  <div style={{fontSize: '14px', fontWeight: 'bold', color: '#e6edf3', textShadow: '0 0 8px rgba(230,237,243,0.2)'}}>{currencySymbol}{data.market_macro.index_price.toLocaleString('en-IN')}</div>
+                  <div style={{fontSize: '14px', fontWeight: 'bold', color: '#e6edf3'}}>{currencySymbol}{data.market_macro.index_price.toLocaleString('en-IN')}</div>
                 </div>
                 <div>
                   <div style={{fontSize: '10px', color: '#8b949e'}}>INDEX P/E</div>
@@ -474,21 +459,19 @@ function App() {
 
         {error && <div style={styles.errorCard}>⚠️ ERROR DIAGNOSTIC: {error}</div>}
 
-        {/* --- DYNAMIC OUTPUT DESK LAYOUT ROUTER --- */}
         {data && (
           <div style={{marginTop: '24px'}}>
             
-            {/* MODE A: IF NO PDF IS ATTACHED -> RENDER PORTFOLIO MATRIX DESK */}
             {!attachedFile && data.optimized_portfolio && (
               <>
                 <div style={styles.kpiGrid}>
                   <div style={styles.kpiCard}>
                     <div style={styles.kpiLabel}>TOTAL ALLOCATED CAPITAL</div>
-                    <div style={{...styles.kpiValue, color: '#38bdf8', textShadow: '0 0 12px rgba(56,189,248,0.2)'}}>{currencySymbol}{(data.profile?.investment_amount || amount).toLocaleString('en-IN')}</div>
+                    <div style={{...styles.kpiValue, color: '#38bdf8'}}>{currencySymbol}{(data.profile?.investment_amount || amount).toLocaleString('en-IN')}</div>
                   </div>
                   <div style={styles.kpiCard}>
                     <div style={styles.kpiLabel}>SHARPE RATIO ENGINE</div>
-                    <div style={{...styles.kpiValue, color: data.sharpe_ratio > 1.0 ? '#10b981' : '#f59e0b', textShadow: data.sharpe_ratio > 1.0 ? '0 0 12px rgba(16,185,129,0.2)' : 'none'}}>SR {data.sharpe_ratio || 0.0}</div>
+                    <div style={{...styles.kpiValue, color: data.sharpe_ratio > 1.0 ? '#10b981' : '#f59e0b'}}>SR {data.sharpe_ratio || 0.0}</div>
                   </div>
                   <div style={styles.kpiCard}>
                     <div style={styles.kpiLabel}>LIVE RISK-FREE BASELINE</div>
@@ -509,8 +492,8 @@ function App() {
                           <CartesianGrid strokeDasharray="3 3" stroke="#161b26" vertical={false} />
                           <XAxis dataKey="label" stroke="#6e7681" style={{ fontSize: '11px' }} tickLine={false} />
                           <YAxis stroke="#6e7681" style={{ fontSize: '11px' }} tickLine={false} tickFormatter={(v) => `${currencySymbol}${Math.round(v).toLocaleString('en-IN')}`} />
-                          <Tooltip contentStyle={{ backgroundColor: '#0d111a', borderColor: '#232d3f', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.5)' }} itemStyle={{ color: '#38bdf8', fontSize: '13px' }} labelStyle={{ color: '#6e7681', fontSize: '11px' }} formatter={(value) => [`${currencySymbol}${Number(value).toLocaleString('en-IN')}`, 'Portfolio Value']} />
-                          <Line type="monotone" dataKey="valuation" stroke="#38bdf8" strokeWidth={3} dot={{ r: 2, fill: '#38bdf8', strokeWidth: 0 }} activeDot={{ r: 5, shadow: '0 0 10px #38bdf8' }} />
+                          <Tooltip contentStyle={{ backgroundColor: '#0d111a', borderColor: '#232d3f', borderRadius: '8px' }} itemStyle={{ color: '#38bdf8', fontSize: '13px' }} labelStyle={{ color: '#6e7681', fontSize: '11px' }} formatter={(value) => [`${currencySymbol}${Number(value).toLocaleString('en-IN')}`, 'Portfolio Value']} />
+                          <Line type="monotone" dataKey="valuation" stroke="#38bdf8" strokeWidth={3} dot={{ r: 2, fill: '#38bdf8', strokeWidth: 0 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
@@ -558,26 +541,21 @@ function App() {
 
                 <div style={styles.adversarialGrid} className="adversarial-grid-responsive">
                   <div style={styles.card}>
-                    <h3 style={{...styles.cardTitle, color: '#10b981', borderBottom: '1px solid rgba(16,185,129,0.15)'}}>
-                      🟢 BULL CASE ANALYST: MARKET ASSET CONVICTION
-                    </h3>
+                    <h3 style={{...styles.cardTitle, color: '#10b981', borderBottom: '1px solid rgba(16,185,129,0.15)'}}>🟢 BULL CASE ANALYST: MARKET ASSET CONVICTION</h3>
                     <div style={styles.reportBlock}>{renderIntelligenceBlock(data.report_bull, '#10b981', 'PORTFOLIO BULL')}</div>
                   </div>
                   <div style={styles.card}>
-                    <h3 style={{...styles.cardTitle, color: '#ef4444', borderBottom: '1px solid rgba(239,68,68,0.15)'}}>
-                      🔴 BEAR CASE ANALYST: PORTFOLIO EXPOSURE HAZARDS
-                    </h3>
+                    <h3 style={{...styles.cardTitle, color: '#ef4444', borderBottom: '1px solid rgba(239,68,68,0.15)'}}>🔴 BEAR CASE ANALYST: PORTFOLIO EXPOSURE HAZARDS</h3>
                     <div style={styles.reportBlock}>{renderIntelligenceBlock(data.report_bear, '#ef4444', 'PORTFOLIO BEAR')}</div>
                   </div>
                 </div>
               </>
             )}
 
-            {/* MODE B: IF PDF FILE IS ATTACHED -> SWITCH CORES TO FULL-SCREEN AUDIT INTELLIGENCE DESK */}
             {attachedFile && (
-              <div style={{...styles.card, border: '1px solid #38bdf840', background: 'linear-gradient(180deg, #0a1122 0%, #070a13 100%)', boxShadow: '0 8px 32px rgba(56,189,248,0.05)'}}>
+              <div style={{...styles.card, border: '1px solid #38bdf840', background: 'linear-gradient(180deg, #0a1122 0%, #070a13 100%)'}}>
                 <h3 style={{...styles.cardTitle, color: '#38bdf8', borderBottom: '1px solid rgba(56,189,248,0.15)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
-                  <span style={{filter: 'drop-shadow(0 0 6px #38bdf8)'}}>📑</span> DEDICATED CORPORATE EARNINGS AUDIT SECURE VIEW: {attachedFile.name.toUpperCase()}
+                  <span>📑</span> DEDICATED CORPORATE EARNINGS AUDIT SECURE VIEW: {attachedFile.name.toUpperCase()}
                 </h3>
                 <p style={{fontSize: '12px', color: '#8b949e', marginTop: '0', marginBottom: '24px', lineHeight: '1.6'}}>
                   Mathematical allocation matrices safely bypassed. System operating in focused Document Audit Mode, extracting contextual summaries, core statements, and balance sheet vectors from the parsing stack.
@@ -585,14 +563,14 @@ function App() {
                 
                 <div style={styles.ragDisplayGridResp} className="adversarial-grid-responsive">
                   <div style={styles.ragExtractSubPane}>
-                    <h4 style={{fontSize: '12px', color: '#10b981', margin: '0 0 14px 0', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid rgba(16,185,129,0.1)', paddingBottom: '6px', letterSpacing: '0.5px'}}>✨ EXTRACTED REVENUE WINS & STRATEGIC HIGHLIGHTS</h4>
+                    <h4 style={{fontSize: '12px', color: '#10b981', margin: '0 0 14px 0', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid rgba(16,185,129,0.1)', paddingBottom: '6px'}}>✨ EXTRACTED REVENUE WINS & STRATEGIC HIGHLIGHTS</h4>
                     <div style={styles.reportBlock}>
                       {renderIntelligenceBlock(data.doc_bull || data.report_bull || data.bull_case, '#10b981', 'DOCUMENT WIN')}
                     </div>
                   </div>
                   
                   <div style={styles.ragExtractSubPane}>
-                    <h4 style={{fontSize: '12px', color: '#ef4444', margin: '0 0 14px 0', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid rgba(239,68,68,0.1)', paddingBottom: '6px', letterSpacing: '0.5px'}}>⚠️ DISCLOSED RISK ENVELOPS & MARGIN PRESSURES</h4>
+                    <h4 style={{fontSize: '12px', color: '#ef4444', margin: '0 0 14px 0', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid rgba(239,68,68,0.1)', paddingBottom: '6px'}}>⚠️ DISCLOSED RISK ENVELOPS & MARGIN PRESSURES</h4>
                     <div style={styles.reportBlock}>
                       {renderIntelligenceBlock(data.doc_bear || data.report_bear || data.bear_case, '#ef4444', 'DOCUMENT RISK')}
                     </div>
@@ -610,87 +588,70 @@ function App() {
 
 const styles = {
   container: { backgroundColor: '#070a13', color: '#c9d1d9', minHeight: '100vh', fontFamily: '"Fira Code", monospace, system-ui', padding: '24px', boxSizing: 'border-box' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '20px', marginBottom: '24px', position: 'relative' },
-  
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '20px', marginBottom: '24px' },
   title: { color: '#38bdf8', fontSize: '24px', fontWeight: '800', letterSpacing: '1.5px', fontFamily: '"Absolute Vodka", "Fira Code", monospace', display: 'block', textAlign: 'left', width: 'fit-content', textShadow: '0 0 15px rgba(56,189,248,0.25)' },
   underlineContainer: { width: '100%', display: 'flex', justifyContent: 'flex-start', marginTop: '2px' },
   centerBlueLine: { height: '3px', backgroundColor: '#38bdf8', width: '385px', borderRadius: '2px', boxShadow: '0 0 8px #38bdf8' },
-  
   subtitle: { color: '#6e7681', fontSize: '13px', marginTop: '8px' },
-  statusBadge: { backgroundColor: '#0a1526', border: '1px solid #1d3b66', borderRadius: '20px', padding: '6px 14px', color: '#38bdf8', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', letterSpacing: '0.5px' },
+  statusBadge: { backgroundColor: '#0a1526', border: '1px solid #1d3b66', borderRadius: '20px', padding: '6px 14px', color: '#38bdf8', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' },
   statusDot: { width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%', display: 'inline-block', boxShadow: '0 0 10px #10b981' },
   main: { maxWidth: '1600px', margin: '0 auto' },
   marketToggleRow: { display: 'flex', gap: '12px', marginBottom: '24px', backgroundColor: '#0c111d', padding: '6px', borderRadius: '12px', border: '1px solid rgba(255, 255, 255, 0.04)' },
   marketTab: { flex: 1, backgroundColor: 'transparent', border: 'none', color: '#6e7681', padding: '12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s' },
-  activeMarketTab: { backgroundColor: '#151e2e', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.2)' },
-  
-  // THREE COLUMN CONTROLLER PANELS STYLING WITH ULTRA SLICK BACKDROP EFFECT
+  activeMarketTab: { backgroundColor: '#151e2e', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.15)' },
   mainWorkspaceLayout: { display: 'grid', gridTemplateColumns: '1fr 1.1fr 0.9fr', gap: '24px', marginBottom: '24px' },
-  controlCard: { backgroundColor: '#0c111d', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 4px 20px rgba(0,0,0,0.15)', transition: 'all 0.3s ease-in-out' },
+  controlCard: { backgroundColor: '#0c111d', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '16px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' },
   sectionHeader: { fontSize: '13px', color: '#8b949e', textTransform: 'uppercase', marginBottom: '18px', letterSpacing: '1px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '8px', fontWeight: '700' },
   formStack: { display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', justifyContent: 'space-between' },
   manualForm: { display: 'flex', flexDirection: 'column', gap: '14px' },
   grid2Col: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
-  textarea: { backgroundColor: '#090d16', border: '1px solid #1f293d', borderRadius: '10px', color: '#e6edf3', padding: '16px', fontSize: '13px', minHeight: '130px', resize: 'none', outline: 'none', lineHeight: '1.6', fontFamily: 'inherit', transition: 'border-color 0.2s', ':focus': { borderColor: '#38bdf8' } },
-  
-  // SEPARATED WIDGET DROP ZONE DECORATORS
+  textarea: { backgroundColor: '#090d16', border: '1px solid #1f293d', borderRadius: '10px', color: '#e6edf3', padding: '16px', fontSize: '13px', minHeight: '130px', resize: 'none', outline: 'none', lineHeight: '1.6', fontFamily: 'inherit' },
   separatedUploaderLayout: { display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'flex-start' },
-  pdfDropZone: { border: '1px dashed #1f293d', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', transition: 'all 0.2s ease' },
+  pdfDropZone: { border: '1px dashed #1f293d', borderRadius: '12px', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' },
   pdfLabelUpload: { fontSize: '11px', color: '#8b949e', cursor: 'pointer', display: 'block', lineHeight: '1.5' },
   fileSuccessRow: { display: 'flex', alignItems: 'center', backgroundColor: '#0c181a', border: '1px solid rgba(56,189,248,0.2)', borderRadius: '8px', padding: '12px 14px', gap: '12px', width: '100%', boxSizing: 'border-box' },
-  removeFileBtn: { marginLeft: 'auto', backgroundColor: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', padding: '4px', transition: 'transform 0.1s', ':hover': { transform: 'scale(1.1)' } },
-  activeUploaderStatusBadge: { marginTop: '14px', alignSelf: 'center', backgroundColor: 'rgba(56,189,248,0.06)', border: '1px solid rgba(56,189,248,0.15)', color: '#38bdf8', borderRadius: '20px', padding: '5px 14px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px', letterSpacing: '0.5px', boxShadow: '0 0 10px rgba(56,189,248,0.1)' },
-  uploaderPulseDot: { width: '6px', height: '6px', backgroundColor: '#38bdf8', borderRadius: '50%', display: 'inline-block', boxShadow: '0 0 6px #38bdf8' },
-  
-  // SCANNER COMPILING TRACK DIAGNOSTIC LOADER BAR
+  removeFileBtn: { marginLeft: 'auto', backgroundColor: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 'bold', fontSize: '13px', padding: '4px' },
+  activeUploaderStatusBadge: { marginTop: '14px', alignSelf: 'center', backgroundColor: 'rgba(56,189,248,0.06)', border: '1px solid rgba(56,189,248,0.15)', color: '#38bdf8', borderRadius: '20px', padding: '5px 14px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' },
+  uploaderPulseDot: { width: '6px', height: '6px', backgroundColor: '#38bdf8', borderRadius: '50%', display: 'inline-block' },
   loadingContainerTrack: { backgroundColor: '#090d16', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '12px', padding: '16px', marginBottom: '24px' },
   loadingBarProgressFilled: { height: '4px', width: '100%', background: 'linear-gradient(90deg, #38bdf8, #a855f7, #38bdf8)', backgroundSize: '200% 100%', borderRadius: '4px' },
-
-  // COMPLIANT MATURED INTERACTIVE INPUT ACTION BUTTONS SWITCH SECTIONS
-  submitButtonGreen: { backgroundColor: '#10b981', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '14px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontFamily: 'inherit', marginTop: '4px', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(16,185,129,0.2)', ':hover': { backgroundColor: '#059669', transform: 'translateY(-1px)' } },
-  submitButtonBlue: { backgroundColor: '#0284c7', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '14px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontFamily: 'inherit', marginTop: '4px', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(2,132,199,0.2)', ':hover': { backgroundColor: '#0369a1', transform: 'translateY(-1px)' } },
-  submitButtonRed: { backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '14px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontFamily: 'inherit', marginTop: '4px', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(220,38,38,0.2)', ':hover': { backgroundColor: '#b91c1c', transform: 'translateY(-1px)' } },
-  
+  submitButtonGreen: { backgroundColor: '#10b981', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '14px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontFamily: 'inherit', marginTop: '4px' },
+  submitButtonBlue: { backgroundColor: '#0284c7', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '14px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontFamily: 'inherit', marginTop: '4px' },
+  submitButtonRed: { backgroundColor: '#dc2626', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '14px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontFamily: 'inherit', marginTop: '4px' },
   sliderGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '11px', color: '#8b949e', letterSpacing: '0.3px' },
+  label: { fontSize: '11px', color: '#8b949e' },
   select: { backgroundColor: '#090d16', border: '1px solid #1f293d', borderRadius: '10px', color: '#e6edf3', padding: '10px', fontSize: '12px', outline: 'none', fontFamily: 'inherit', cursor: 'pointer' },
   checkboxContainer: { display: 'flex', flexWrap: 'wrap', gap: '8px', backgroundColor: '#090d16', padding: '10px', borderRadius: '10px', border: '1px solid #1f293d' },
-  checkboxLabel: { fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', backgroundColor: '#141b2e50', border: '1px solid rgba(255,255,255,0.02)' },
+  checkboxLabel: { fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', padding: '4px 8px', borderRadius: '6px', backgroundColor: '#141b2e50' },
   checkbox: { cursor: 'pointer', accentColor: '#38bdf8' },
-  
   splitTelemetryRow: { display: 'flex', gap: '24px', alignItems: 'stretch', flexWrap: 'wrap', marginBottom: '24px' },
-  educationalCard: { backgroundColor: '#0b1220', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' },
-  educationalText: { fontSize: '12px', color: '#94a3b8', lineHeight: '1.6', margin: '8px 0 0 0' },
+  educationalCard: { backgroundColor: '#0b1220', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '16px', padding: '20px', flex: 1 },
+  educationalText: { fontSize: '12px', color: '#94a3b8', lineHeight: '1.6' },
   macroTelemetryGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: '12px', marginTop: '12px' },
-  errorCard: { border: '1px solid #ef4444', borderRadius: '12px', color: '#ef4444', padding: '16px', marginBottom: '24px', fontSize: '13px', backgroundColor: 'rgba(239,68,68,0.04)', boxShadow: '0 4px 15px rgba(239,68,68,0.05)' },
-  
+  errorCard: { border: '1px solid #ef4444', borderRadius: '12px', color: '#ef4444', padding: '16px', marginBottom: '24px', fontSize: '13px', backgroundColor: 'rgba(239,68,68,0.04)' },
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' },
-  kpiCard: { backgroundColor: '#0c111d', border: '1px solid rgba(255, 255, 255, 0.04)', borderRadius: '16px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' },
+  kpiCard: { backgroundColor: '#0c111d', border: '1px solid rgba(255, 255, 255, 0.04)', borderRadius: '16px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '8px' },
   kpiLabel: { color: '#8b949e', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.8px' },
   kpiValue: { fontSize: '22px', fontWeight: '800' },
-  card: { backgroundColor: '#0c111d', border: '1px solid rgba(255, 255, 255, 0.04)', borderRadius: '16px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.15)' },
+  card: { backgroundColor: '#0c111d', border: '1px solid rgba(255, 255, 255, 0.04)', borderRadius: '16px', padding: '24px' },
   cardTitle: { color: '#e6edf3', fontSize: '14px', fontWeight: 'bold', borderBottom: '1px solid rgba(255, 255, 255, 0.05)', paddingBottom: '12px', marginBottom: '18px', textTransform: 'uppercase', letterSpacing: '0.8px' },
   tableWrapper: { overflowX: 'auto', width: '100%' },
   table: { width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '13px', minWidth: '600px' },
-  th: { borderBottom: '2px solid #1f293d', padding: '12px 10px', color: '#8b949e', fontWeight: '700', letterSpacing: '0.5px' },
-  tr: { borderBottom: '1px solid rgba(255,255,255,0.02)', ':hover': { backgroundColor: '#141b2e30' } },
+  th: { borderBottom: '2px solid #1f293d', padding: '12px 10px', color: '#8b949e', fontWeight: '700' },
+  tr: { borderBottom: '1px solid rgba(255,255,255,0.02)' },
   td: { padding: '14px 10px', verticalAlign: 'middle' },
-  tickerBadge: { backgroundColor: '#141b2e', border: '1px solid #1f293d', borderRadius: '6px', padding: '5px 10px', fontWeight: 'bold', color: '#e6edf3', letterSpacing: '0.5px' },
+  tickerBadge: { backgroundColor: '#141b2e', border: '1px solid #1f293d', borderRadius: '6px', padding: '5px 10px', fontWeight: 'bold', color: '#e6edf3' },
   shareCount: { color: '#10b981', fontSize: '15px', fontWeight: '700' },
-  valuationAlertTag: { marginLeft: '8px', backgroundColor: 'rgba(239,68,68,0.06)', border: '1px solid #ef4444', color: '#ef4444', fontSize: '9px', padding: '3px 6px', borderRadius: '4px', fontWeight: 'bold', letterSpacing: '0.3px' },
-  
+  valuationAlertTag: { marginLeft: '8px', backgroundColor: 'rgba(239,68,68,0.06)', border: '1px solid #ef4444', color: '#ef4444', fontSize: '9px', padding: '3px 6px', borderRadius: '4px', fontWeight: 'bold' },
   adversarialGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginTop: '24px' },
   reportBlock: { display: 'flex', flexDirection: 'column', gap: '14px' },
-  
-  // PARSING ENGINE STYLING TIERS
   intelligenceCard: { backgroundColor: '#090d16', border: '1px solid rgba(255,255,255,0.03)', borderRadius: '10px', padding: '16px', position: 'relative' },
   intelligenceCardHeader: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', borderBottom: '1px solid rgba(255,255,255,0.03)', paddingBottom: '8px', marginBottom: '8px' },
   intelligenceIndicatorDot: { width: '6px', height: '6px', borderRadius: '50%' },
-  briefBadge: { marginLeft: 'auto', fontSize: '9px', border: '1px solid', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', letterSpacing: '0.3px' },
+  briefBadge: { marginLeft: 'auto', fontSize: '9px', border: '1px solid', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' },
   executionStepRow: { display: 'flex', gap: '12px', alignItems: 'flex-start', backgroundColor: 'rgba(20,27,46,0.3)', padding: '14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.01)' },
   executionStepNumber: { border: '1px solid', width: '18px', height: '18px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', flexShrink: 0, fontWeight: 'bold' },
   narrativeParagraphBlock: { padding: '0 4px' },
-  
   ragDisplayGridResp: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },
   ragExtractSubPane: { backgroundColor: '#080c14', border: '1px solid rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px' }
 };
