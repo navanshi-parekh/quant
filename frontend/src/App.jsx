@@ -93,7 +93,6 @@ function App() {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
   };
 
-  // Helper utility to cleanly parse out markdown stars and build individual intelligence segments
   const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
     if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
     
@@ -406,7 +405,7 @@ function App() {
               </div>
             </div>
 
-            {/* PHASE 3 INTEGRATION: ADVERSARIAL AGENT INTELLIGENCE SIDE-BY-SIDE PANELS */}
+            {/* ADVERSARIAL AGENT INTELLIGENCE SIDE-BY-SIDE PANELS */}
             <div style={styles.adversarialGrid} className="adversarial-grid-responsive">
               <div style={styles.card}>
                 <h3 style={{...styles.cardTitle, color: '#34d399', borderBottom: '1px solid rgba(52,211,153,0.2)'}}>
@@ -464,7 +463,8 @@ const styles = {
   educationalCard: { backgroundColor: '#0b1324', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px' },
   educationalText: { fontSize: '12px', color: '#94a3b8', lineHeight: '1.6', marginTop: '4px' },
   macroTelemetryGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: '12px', marginTop: '8px' },
-  errorCard: { rgba(248,81,73,0.1)': '#0d111a', border: '1px solid #f85149', borderRadius: '8px', color: '#f85149', padding: '14px', marginBottom: '24px', fontSize: '13px', backgroundColor: 'rgba(248,81,73,0.07)' },
+  // FIXED: Syntax quote containment error safely handled to prevent compiler parsing blocks
+  errorCard: { border: '1px solid #f85149', borderRadius: '8px', color: '#f85149', padding: '14px', marginBottom: '24px', fontSize: '13px', backgroundColor: 'rgba(248,81,73,0.07)' },
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' },
   kpiCard: { backgroundColor: '#0d111a', border: '1px solid #1f242e', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '6px' },
   kpiLabel: { color: '#8b949e', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.6px' },
