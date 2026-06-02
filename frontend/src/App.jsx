@@ -144,28 +144,39 @@ function App() {
   };
 
   // PARSING ENGINE: Smart string and object flattener
+  // PARSING ENGINE: Deep object flattener explicitly ensures nested objects strip out structural noise cleanly
   const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
     if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
     
-    let cleanString = "";
-    if (Array.isArray(rawText)) {
-      cleanString = rawText.join('\n');
-    } else if (typeof rawText === 'object') {
-      cleanString = Object.entries(rawText)
-        .map(([key, val]) => `${key}: ${typeof val === 'object' ? JSON.stringify(val) : val}`)
-        .join('\n');
-    } else {
-      cleanString = String(rawText);
-    }
+    // RECURSIVE FLATTENER: Deep dives into nested dictionaries/objects to extract pure values
+    const flattenToText = (input) => {
+      if (Array.isArray(input)) {
+        return input.map(item => flattenToText(item)).join('\n');
+      }
+      if (input !== null && typeof input === 'object') {
+        return Object.entries(input)
+          .map(([key, val]) => {
+            // If the key is generic like 'title' or 'bullet', don't print the key name prefix
+            const skipKeyPrefix = ['title', 'bullet', 'text', 'body', 'content', 'value', 'desc', 'description'].includes(key.toLowerCase());
+            const valueStr = typeof val === 'object' ? flattenToText(val) : String(val);
+            return skipKeyPrefix ? valueStr : `${key}: ${valueStr}`;
+          })
+          .join('\n');
+      }
+      return String(input);
+    };
+
+    const cleanString = flattenToText(rawText);
 
     return cleanString.split('\n').map((paragraph, idx) => {
       if (!paragraph.trim()) return null;
       
-      const cleanText = paragraph.replace(/\*\*/g, '').replace(/[\{\}\"\[\]\,]/g, '');
-      if (!cleanText.trim()) return null;
+      // Clean off markdown bold blocks and JSON syntax characters safely
+      const cleanText = paragraph.replace(/\*\*/g, '').replace(/[\{\}\"\[\]\,]/g, '').trim();
+      if (!cleanText) return null;
 
-      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk') || cleanText.toLowerCase().includes('case') || cleanText.toLowerCase().includes('bullet') || cleanText.toLowerCase().includes('driver') || cleanText.toLowerCase().includes('exposure'));
-      const isBulletStep = cleanText.trim().startsWith('-') || cleanText.trim().startsWith('*') || /^\d+\./.test(cleanText.trim());
+      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk') || cleanText.toLowerCase().includes('case') || cleanText.toLowerCase().includes('bullet') || cleanText.toLowerCase().includes('driver') || cleanText.toLowerCase().includes('exposure') || cleanText.toLowerCase().includes('summary'));
+      const isBulletStep = cleanText.startsWith('-') || cleanText.startsWith('*') || /^\d+\./.test(cleanText);
 
       if (isHeaderLine) {
         const [title, description] = cleanText.split(/:(.+)/);
