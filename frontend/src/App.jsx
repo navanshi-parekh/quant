@@ -141,51 +141,66 @@ function App() {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
   };
 
-  // PARSING ENGINE: Smart string and object flattener with explicit string block safety guards
+  // PARSING ENGINE: Absolute data extraction pass guaranteeing text extraction from any mixed object types
   const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
     if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
     
-    // RECURSIVE FLATTENER: Deep dives into nested dictionaries to extract pure values safely
-    const flattenToText = (input) => {
+    // Deconstructs mixed arrays/objects down to flat readable text lines
+    const extractTextLayers = (input) => {
+      if (input === null || input === undefined) return '';
+      
       if (Array.isArray(input)) {
-        return input.map(item => flattenToText(item)).join('\n');
+        return input.map(item => extractTextLayers(item)).join('\n');
       }
-      if (input !== null && typeof input === 'object') {
-        // If it's a raw object but contains a localized string signature, return it directly
-        if (typeof input.toString === 'function' && !input.hasOwnProperty('toString') && input.toString() !== '[object Object]') {
-          return input.toString();
+      
+      if (typeof input === 'object') {
+        // Look for common nested text keys directly first
+        const directKeys = ['text', 'bullet', 'body', 'content', 'value', 'desc', 'description', 'title'];
+        for (const key of directKeys) {
+          if (input[key] && typeof input[key] === 'string') {
+            return input[key];
+          }
         }
         
+        // Pick out values if the object is just a wrapper map
         return Object.entries(input)
           .map(([key, val]) => {
-            const skipKeyPrefix = ['title', 'bullet', 'text', 'body', 'content', 'value', 'desc', 'description', 'bull_case', 'bear_case', 'doc_bull', 'doc_bear'].includes(key.toLowerCase());
-            const valueStr = (val !== null && typeof val === 'object') ? flattenToText(val) : String(val);
-            return skipKeyPrefix ? valueStr : `${key}: ${valueStr}`;
+            const skipKey = ['title', 'bullet', 'text', 'body', 'content', 'value', 'desc', 'description', 'bull_case', 'bear_case', 'doc_bull', 'doc_bear'].includes(key.toLowerCase());
+            const parsedVal = typeof val === 'object' ? extractTextLayers(val) : String(val);
+            return skipKey ? parsedVal : `${key}: ${parsedVal}`;
           })
           .join('\n');
       }
+      
       return String(input);
     };
 
-    let cleanString = flattenToText(rawText);
+    let processedText = extractTextLayers(rawText);
 
-    // Fallback Guard: If the flattener fails or returns a generic object signature, extract keys manually
-    if (cleanString.includes('[object Object]') || cleanString === 'object Object') {
+    // Hard Catch: If any object object strings sneaked past, force stringification of the raw asset instead
+    if (!processedText || processedText.includes('[object Object]') || processedText === 'object Object') {
       try {
-        cleanString = typeof rawText === 'object' ? JSON.stringify(rawText) : String(rawText);
+        if (typeof rawText === 'object') {
+          // If it's a valid object, strip out structural markers to print pure text strings
+          processedText = Object.values(rawText)
+            .map(v => typeof v === 'object' ? JSON.stringify(v) : String(v))
+            .join('\n');
+        } else {
+          processedText = String(rawText);
+        }
       } catch (e) {
-        cleanString = "Analysis data stream unpacking breakdown.";
+        processedText = "Inference stream serialization error.";
       }
     }
 
-    return cleanString.split('\n').map((paragraph, idx) => {
+    return processedText.split('\n').map((paragraph, idx) => {
       if (!paragraph.trim()) return null;
       
-      // Clean off markdown symbols and leftover raw JSON notation elements safely
+      // Clear out raw JSON syntax brackets and quotation marks left from un-parsed backend blocks
       const cleanText = paragraph.replace(/\*\*/g, '').replace(/[\{\}\"\[\]\,]/g, '').trim();
-      if (!cleanText) return null;
+      if (!cleanText || cleanText === 'object Object') return null;
 
-      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk') || cleanText.toLowerCase().includes('case') || cleanText.toLowerCase().includes('bullet') || cleanText.toLowerCase().includes('driver') || cleanText.toLowerCase().includes('exposure') || cleanText.toLowerCase().includes('summary') || cleanText.toLowerCase().includes('premium'));
+      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk') || cleanText.toLowerCase().includes('case') || cleanText.toLowerCase().includes('bullet') || cleanText.toLowerCase().includes('driver') || cleanText.toLowerCase().includes('exposure') || cleanText.toLowerCase().includes('summary'));
       const isBulletStep = cleanText.startsWith('-') || cleanText.startsWith('*') || /^\d+\./.test(cleanText);
 
       if (isHeaderLine) {
