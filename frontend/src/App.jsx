@@ -141,66 +141,72 @@ function App() {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
   };
 
-  // PARSING ENGINE: Absolute data extraction pass guaranteeing text extraction from any mixed object types
+  // PARSING ENGINE: Deep extraction pass that forces raw values out of complex objects or arrays
   const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
     if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
     
-    // Deconstructs mixed arrays/objects down to flat readable text lines
-    const extractTextLayers = (input) => {
+    // Deep recursive extractor that forces text chunks out of arrays, maps, or nested fields
+    const forceExtractStrings = (input) => {
       if (input === null || input === undefined) return '';
       
-      if (Array.isArray(input)) {
-        return input.map(item => extractTextLayers(item)).join('\n');
+      // If it's a flat primitive value, return it directly
+      if (typeof input !== 'object') {
+        return String(input);
       }
       
+      // Track 1: If it's an Array, map down each item recursively
+      if (Array.isArray(input)) {
+        return input.map(item => forceExtractStrings(item)).join('\n');
+      }
+      
+      // Track 2: If it's a standard Object dictionary map
       if (typeof input === 'object') {
-        // Look for common nested text keys directly first
-        const directKeys = ['text', 'bullet', 'body', 'content', 'value', 'desc', 'description', 'title'];
-        for (const key of directKeys) {
+        // Look for common nested content keys directly first to save processing time
+        const commonTextKeys = ['text', 'bullet', 'body', 'content', 'value', 'desc', 'description', 'title', 'summary'];
+        for (const key of commonTextKeys) {
           if (input[key] && typeof input[key] === 'string') {
             return input[key];
           }
         }
         
-        // Pick out values if the object is just a wrapper map
-        return Object.entries(input)
-          .map(([key, val]) => {
-            const skipKey = ['title', 'bullet', 'text', 'body', 'content', 'value', 'desc', 'description', 'bull_case', 'bear_case', 'doc_bull', 'doc_bear'].includes(key.toLowerCase());
-            const parsedVal = typeof val === 'object' ? extractTextLayers(val) : String(val);
-            return skipKey ? parsedVal : `${key}: ${parsedVal}`;
+        // Loop values out directly to completely bypass object-key structural noise
+        return Object.values(input)
+          .map(val => {
+            if (val !== null && typeof val === 'object') {
+              return forceExtractStrings(val);
+            }
+            return String(val);
           })
+          .filter(str => str.trim() !== '' && str !== '[object Object]' && str !== 'object Object')
           .join('\n');
       }
       
       return String(input);
     };
 
-    let processedText = extractTextLayers(rawText);
+    let cleanString = forceExtractStrings(rawText);
 
-    // Hard Catch: If any object object strings sneaked past, force stringification of the raw asset instead
-    if (!processedText || processedText.includes('[object Object]') || processedText === 'object Object') {
+    // Hard Catch: If the payload is a raw unparsed JSON string block, handle it cleanly
+    if (!cleanString || cleanString.trim() === '' || cleanString.includes('[object Object]') || cleanString === 'object Object') {
       try {
         if (typeof rawText === 'object') {
-          // If it's a valid object, strip out structural markers to print pure text strings
-          processedText = Object.values(rawText)
-            .map(v => typeof v === 'object' ? JSON.stringify(v) : String(v))
-            .join('\n');
+          cleanString = JSON.stringify(rawText);
         } else {
-          processedText = String(rawText);
+          cleanString = String(rawText);
         }
       } catch (e) {
-        processedText = "Inference stream serialization error.";
+        cleanString = "Inference stream unpacking error.";
       }
     }
 
-    return processedText.split('\n').map((paragraph, idx) => {
+    return cleanString.split('\n').map((paragraph, idx) => {
       if (!paragraph.trim()) return null;
       
-      // Clear out raw JSON syntax brackets and quotation marks left from un-parsed backend blocks
+      // Clean off structural brackets and residual quotation marks left from raw JSON conversions
       const cleanText = paragraph.replace(/\*\*/g, '').replace(/[\{\}\"\[\]\,]/g, '').trim();
-      if (!cleanText || cleanText === 'object Object') return null;
+      if (!cleanText || cleanText === 'object Object' || cleanText === '[object Object]') return null;
 
-      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk') || cleanText.toLowerCase().includes('case') || cleanText.toLowerCase().includes('bullet') || cleanText.toLowerCase().includes('driver') || cleanText.toLowerCase().includes('exposure') || cleanText.toLowerCase().includes('summary'));
+      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk') || cleanText.toLowerCase().includes('case') || cleanText.toLowerCase().includes('bullet') || cleanText.toLowerCase().includes('driver') || cleanText.toLowerCase().includes('exposure') || cleanText.toLowerCase().includes('summary') || cleanText.toLowerCase().includes('opportunity'));
       const isBulletStep = cleanText.startsWith('-') || cleanText.startsWith('*') || /^\d+\./.test(cleanText);
 
       if (isHeaderLine) {
