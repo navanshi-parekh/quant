@@ -47,7 +47,7 @@ function App() {
     setAttachedFile(null);
   };
 
-  // FIXED: Standardized transmission architecture ensuring sector payloads map smoothly via both prompt and manual forms
+  // FULLY ROBUST ARCHITECTURE: Enforces slider defaults directly into form processing blocks
   const executePipelineRequest = async (payloadPrompt, selectedMarket, activeSectors) => {
     setLoading(true);
     setError(null);
@@ -63,7 +63,6 @@ function App() {
       formDataBody.append('horizon_strategy', horizonStrategy);
       formDataBody.append('target_profit_percentage', Number(targetProfit));
       
-      // CRITICAL UPGRADE: Hand off sectors explicitly down the multi-part data payload stream
       activeSectors.forEach((sector) => {
         formDataBody.append('sectors', sector);
       });
@@ -77,7 +76,11 @@ function App() {
         body: formDataBody,
       });
       
-      if (!response.ok) throw new Error('Internal validation processing fault over backend endpoints.');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ detail: 'Backend generation fault.' }));
+        throw new Error(errorData.detail || 'Internal processing breakdown across endpoints.');
+      }
+      
       const result = await response.json();
       setData(result);
     } catch (err) {
@@ -91,15 +94,26 @@ function App() {
     e.preventDefault();
     const currency = market === 'american' ? 'USD' : 'INR';
     const sectorsToPass = selectedSectors.length > 0 ? selectedSectors : ['Technology'];
-    const synthesizedPrompt = `Deploy exactly ${amount} ${currency} for a horizon of ${horizon} years directly into the following sectors: ${sectorsToPass.join(', ')}. Strategy is ${horizonStrategy} aiming for a risk profile of ${riskProfile}.`;
+    
+    // Explicit structural sentence configuration to ensure regex matches pass smoothly
+    const synthesizedPrompt = `Allocate exactly ${amount} ${currency} for a investment window of ${horizon} years directly into the following sector matrix: ${sectorsToPass.join(', ')}. Strategy profile is ${horizonStrategy} targeting a risk matrix configuration of ${riskProfile}.`;
     executePipelineRequest(synthesizedPrompt, market, sectorsToPass);
   };
 
   const handlePromptSubmit = (e) => {
     e.preventDefault();
-    if (!prompt.trim()) return;
     const sectorsToPass = selectedSectors.length > 0 ? selectedSectors : ['Technology'];
-    executePipelineRequest(prompt, market, sectorsToPass);
+    const currency = market === 'american' ? 'USD' : 'INR';
+    
+    // CRITICAL SAFETY GUARD: If text is missing explicit values, append mathematical context to preserve parsing paths
+    let structuredPrompt = prompt.trim();
+    if (!structuredPrompt.includes(String(amount)) && !structuredPrompt.toLowerCase().includes('years')) {
+      structuredPrompt += ` [Constraint Metadata Base Configuration Override: Deploy exactly ${amount} ${currency} over ${horizon} years]`;
+    } else if (!structuredPrompt) {
+      return;
+    }
+
+    executePipelineRequest(structuredPrompt, market, sectorsToPass);
   };
 
   const getRiskColor = (risk) => {
@@ -119,7 +133,6 @@ function App() {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
   };
 
-  // FIXED: Seamless key-value flattening ensures nested JSON strings map out natively without [object Object] interference
   const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
     if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
     
@@ -209,11 +222,11 @@ function App() {
                 style={styles.textarea}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder={`Describe your investment goals for the ${market} desk...`}
+                placeholder={`Describe your investment goals for the ${market} desk... (e.g., Allocate 75000 over 2 years in tech stocks)`}
                 disabled={loading}
               />
               
-              {/* Context Augmentation Drag/Drop input */}
+              {/* Optional Report Upload Dropzone */}
               <div style={styles.pdfDropZone}>
                 <div style={{fontSize: '11px', color: '#8b949e', fontWeight: 'bold', marginBottom: '6px', textTransform: 'uppercase'}}>
                   📁 Context Augmentation: Corporate Report (Optional)
@@ -235,7 +248,7 @@ function App() {
               </div>
 
               <button type="submit" style={styles.submitButton} disabled={loading}>
-                {loading ? 'PROCESSING COMPREHENSIVE DATA...' : 'RUN AI PROMPT OPTIMIZATION'}
+                {loading ? 'PROCESSING AUDIT COMPREHENSION...' : 'RUN AI PROMPT OPTIMIZATION'}
               </button>
             </form>
           </section>
@@ -300,13 +313,13 @@ function App() {
               </div>
 
               <button type="submit" style={{...styles.submitButton, backgroundColor: '#0284c7'}} disabled={loading}>
-                {loading ? 'RECALCULATING MATRIX CORES...' : 'APPLY STRATEGIC MATRIX CONFIG'}
+                {loading ? 'RECALCULATING CORES...' : 'APPLY STRATEGIC MATRIX CONFIG'}
               </button>
             </form>
           </section>
         </div>
 
-        {/* Structural Telemetry Layout Row */}
+        {/* Strategic Sharpe Ratio Explainer */}
         <div style={styles.splitTelemetryRow}>
           <section style={{...styles.educationalCard, margin: 0, flex: 1.2}}>
             <h3 style={styles.cardTitle}>🧠 Sharpe Ratio Core Metric: Risk-Adjusted Return Performance</h3>
@@ -349,7 +362,7 @@ function App() {
 
         {data && data.optimized_portfolio && (
           <div style={{marginTop: '24px'}}>
-            {/* KPI Telemetry Metrics */}
+            {/* KPI Telemetry Panels */}
             <div style={styles.kpiGrid}>
               <div style={styles.kpiCard}>
                 <div style={styles.kpiLabel}>TOTAL ALLOCATED CAPITAL</div>
@@ -373,7 +386,7 @@ function App() {
               </div>
             </div>
 
-            {/* Backtest Trajectory Map */}
+            {/* Recharts Timeline */}
             {data.backtest_trajectory && data.backtest_trajectory.length > 0 && (
               <section style={{...styles.card, marginBottom: '24px', border: '1px solid #1f242e'}}>
                 <h3 style={styles.cardTitle}>📈 Portfolio Growth Engine Timeline Forecast</h3>
@@ -419,7 +432,7 @@ function App() {
               </section>
             )}
 
-            {/* Asset Matrix Spreadsheet Card */}
+            {/* Asset Matrix Spreadsheet */}
             <div style={{marginBottom: '24px'}}>
               <div style={styles.card}>
                 <h3 style={styles.cardTitle}>📊 Optimal Asset Matrix & Fundamental Screener</h3>
@@ -467,7 +480,7 @@ function App() {
               </div>
             </div>
 
-            {/* ADVERSARIAL AGENT INTELLIGENCE SIDE-BY-SIDE PANELS */}
+            {/* Side-by-Side Analytical Streams */}
             <div style={styles.adversarialGrid} className="adversarial-grid-responsive">
               <div style={styles.card}>
                 <h3 style={{...styles.cardTitle, color: '#34d399', borderBottom: '1px solid rgba(52,211,153,0.2)'}}>
