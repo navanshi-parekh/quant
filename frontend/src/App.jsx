@@ -45,9 +45,10 @@ function App() {
 
   const removeAttachedFile = () => {
     setAttachedFile(null);
+    setData(null); // Clear previous reports upon document reset to stay decoupled
   };
 
-  // CORE NETWORK CONTROLLER: Standardized transmission architecture ensuring sector payloads map smoothly via multipart FormData
+  // CORE NETWORK CONTROLLER: Standardized transmission architecture ensuring form payloads map smoothly via multipart FormData
   const executePipelineRequest = async (payloadPrompt, selectedMarket, activeSectors) => {
     setLoading(true);
     setError(null);
@@ -63,6 +64,7 @@ function App() {
       formDataBody.append('horizon_strategy', horizonStrategy);
       formDataBody.append('target_profit_percentage', Number(targetProfit));
       
+      // Hand off sectors explicitly down the multi-part data payload stream
       activeSectors.forEach((sector) => {
         formDataBody.append('sectors', sector);
       });
@@ -95,6 +97,7 @@ function App() {
     const currency = market === 'american' ? 'USD' : 'INR';
     const sectorsToPass = selectedSectors.length > 0 ? selectedSectors : ['Technology'];
     
+    // Explicit structural sentence configuration to ensure regex matches pass smoothly
     const synthesizedPrompt = `Allocate exactly ${amount} ${currency} for an investment window of ${horizon} years directly into the following sector matrix: ${sectorsToPass.join(', ')}. Strategy profile is ${horizonStrategy} targeting a risk matrix configuration of ${riskProfile}.`;
     executePipelineRequest(synthesizedPrompt, market, sectorsToPass);
   };
@@ -105,10 +108,13 @@ function App() {
     const currency = market === 'american' ? 'USD' : 'INR';
     
     let structuredPrompt = prompt.trim();
-    if (!structuredPrompt) return;
+    if (!structuredPrompt && !attachedFile) return;
 
-    if (!structuredPrompt.includes(String(amount)) && !structuredPrompt.toLowerCase().includes('years')) {
+    // Direct automated instruction fallback string formulation if a raw text prompt lacks integers
+    if (structuredPrompt && !structuredPrompt.includes(String(amount)) && !structuredPrompt.toLowerCase().includes('years')) {
       structuredPrompt += ` [Constraint Metadata Base Configuration Override: Deploy exactly ${amount} ${currency} over ${horizon} years]`;
+    } else if (!structuredPrompt && attachedFile) {
+      structuredPrompt = `Perform an isolated, multi-perspective financial audit and context extraction for the attached file: ${attachedFile.name}`;
     }
 
     executePipelineRequest(structuredPrompt, market, sectorsToPass);
@@ -125,12 +131,12 @@ function App() {
   };
 
   const currencySymbol = market === 'american' ? '$' : '₹';
-  const currencyCode = market === 'american' ? 'USD' : 'INR';
 
   const checkIsOvervalued = (peValue) => {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
   };
 
+  // PARSING ENGINE: Seamless key-value flattening ensures nested JSON strings or objects unpack cleanly without crashes
   const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
     if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
     
@@ -151,7 +157,7 @@ function App() {
       const cleanText = paragraph.replace(/\*\*/g, '').replace(/[\{\}\"\[\]\,]/g, '');
       if (!cleanText.trim()) return null;
 
-      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk') || cleanText.toLowerCase().includes('case') || cleanText.toLowerCase().includes('bullet'));
+      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk') || cleanText.toLowerCase().includes('case') || cleanText.toLowerCase().includes('bullet') || cleanText.toLowerCase().includes('driver') || cleanText.toLowerCase().includes('exposure'));
       const isBulletStep = cleanText.trim().startsWith('-') || cleanText.trim().startsWith('*') || /^\d+\./.test(cleanText.trim());
 
       if (isHeaderLine) {
@@ -190,11 +196,10 @@ function App() {
     <div style={styles.container}>
       <style>{`
         @media (max-width: 1200px) {
-          .input-layout-responsive { grid-template-columns: 1fr !important; }
+          .main-workspace-layout { grid-template-columns: 1fr !important; }
           .grid-2col-responsive { grid-template-columns: 1fr !important; }
           .header-responsive { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
           .adversarial-grid-responsive { grid-template-columns: 1fr !important; }
-          .main-workspace-layout { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
@@ -210,16 +215,16 @@ function App() {
       </header>
 
       <main style={styles.main}>
-        {/* Market Selector Toggles */}
+        {/* Market Selector Desk Toggles */}
         <div style={styles.marketToggleRow}>
           <button type="button" style={{...styles.marketTab, ...(market === 'indian' ? styles.activeMarketTab : {})}} onClick={() => { setMarket('indian'); setAmount(75000); setData(null); }}>🇮🇳 INDIAN DESK</button>
           <button type="button" style={{...styles.marketTab, ...(market === 'american' ? styles.activeMarketTab : {})}} onClick={() => { setMarket('american'); setAmount(5000); setData(null); }}>🇺🇸 US DESK</button>
         </div>
 
-        {/* THREE-COLUMN WORKSPACE: Separating parameters from document uploads completely */}
+        {/* THREE-COLUMN COMPLIANT INPUT WORKSPACE */}
         <div style={styles.mainWorkspaceLayout} className="main-workspace-layout">
           
-          {/* Column 1: Core AI Text Interface */}
+          {/* Column 1: AI Prompt Submissions */}
           <section style={styles.controlCard}>
             <h2 style={styles.sectionHeader}>🤖 AI Prompt Interface</h2>
             <div style={styles.formStack}>
@@ -227,7 +232,7 @@ function App() {
                 style={styles.textarea}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder={`Describe your investment goals for the ${market} desk...`}
+                placeholder={attachedFile ? `Provide focus criteria for auditing ${attachedFile.name}...` : `Describe your investment goals for the ${market} desk...`}
                 disabled={loading}
               />
               <button 
@@ -236,12 +241,12 @@ function App() {
                 style={styles.submitButton} 
                 disabled={loading}
               >
-                {loading ? 'RUNNING INFERENCE...' : 'RUN AI PROMPT OPTIMIZATION'}
+                {loading ? 'RUNNING DEEP INFERENCE...' : attachedFile ? 'RUN AUDIT REPORT MATCH' : 'RUN AI PROMPT OPTIMIZATION'}
               </button>
             </div>
           </section>
 
-          {/* Column 2: Hard Strategy Contraints Forms */}
+          {/* Column 2: Strategy Constraint Sliders */}
           <section style={styles.controlCard}>
             <h2 style={styles.sectionHeader}>🎛️ Strategic Constraint Parameters</h2>
             <div style={styles.manualForm}>
@@ -305,37 +310,37 @@ function App() {
                 type="button" 
                 onClick={handleManualSubmit} 
                 style={{...styles.submitButton, backgroundColor: '#0284c7'}} 
-                disabled={loading}
+                disabled={loading || attachedFile}
               >
-                {loading ? 'COMPUTING VALUES...' : 'APPLY STRATEGIC MATRIX CONFIG'}
+                {attachedFile ? 'BYPASSED IN FILE MODE' : 'APPLY STRATEGIC MATRIX CONFIG'}
               </button>
             </div>
           </section>
 
-          {/* COLUMN 3: STANDALONE EXTRACTION COMPANION PACK WIDGET */}
-          <section style={{...styles.controlCard, borderColor: attachedFile ? '#1b4431' : '#1f242e'}}>
-            <h2 style={{...styles.sectionHeader, color: attachedFile ? '#34d399' : '#8b949e'}}>📑 Isolated Context Auditing Workspace</h2>
+          {/* Column 3: Standalone Context Upload Desk */}
+          <section style={{...styles.controlCard, borderColor: attachedFile ? '#0284c7' : '#1f242e'}}>
+            <h2 style={{...styles.sectionHeader, color: attachedFile ? '#38bdf8' : '#8b949e'}}>📑 Isolated Context Auditing Workspace</h2>
             <div style={styles.separatedUploaderLayout}>
               <p style={{fontSize: '11px', color: '#8b949e', margin: '0 0 12px 0', lineHeight: '1.5'}}>
-                Drop standard brokerage research PDF sheets or quarterly logs below. The engine splits and matches findings inside an independent processing track.
+                Drop standard brokerage research PDF sheets or quarterly filings below. Uploading pivots the dashboard to isolate report analytics automatically.
               </p>
               
-              <div style={{...styles.pdfDropZone, backgroundColor: attachedFile ? '#0d191b' : '#141822', minHeight: '110px', justifyContent: 'center'}}>
+              <div style={{...styles.pdfDropZone, backgroundColor: attachedFile ? '#0d192b' : '#141822', minHeight: '110px', justifyContent: 'center'}}>
                 {!attachedFile ? (
                   <label style={styles.pdfLabelUpload}>
                     <input type="file" accept=".pdf" onChange={handleFileDropChange} style={{display: 'none'}} />
                     <div style={{fontSize: '24px', marginBottom: '8px'}}>📁</div>
                     <span style={{color: '#58a6ff', cursor: 'pointer', fontWeight: 'bold'}}>Upload Corporate PDF Filing</span>
-                    <div style={{fontSize: '10px', color: '#6e7681', marginTop: '4px'}}>Context will display in isolated layout blocks below</div>
+                    <div style={{fontSize: '10px', color: '#6e7681', marginTop: '4px'}}>Dashboard automatically switches execution views</div>
                   </label>
                 ) : (
-                  <div style={{...styles.fileSuccessRow, border: 'none', backgroundColor: 'transparent'}}>
+                  <div style={styles.fileSuccessRow}>
                     <span style={{fontSize: '22px'}}>📄</span>
                     <div style={{display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden'}}>
-                      <span style={{color: '#34d399', fontSize: '12px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px'}}>
+                      <span style={{color: '#38bdf8', fontSize: '12px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '170px'}}>
                         {attachedFile.name}
                       </span>
-                      <span style={{fontSize: '10px', color: '#8b949e'}}>Filing Active (&lt;5 Pages Buffered)</span>
+                      <span style={{fontSize: '10px', color: '#8b949e'}}> FCF / Revenue Tracker Active</span>
                     </div>
                     <button type="button" onClick={removeAttachedFile} style={styles.removeFileBtn}>✕</button>
                   </div>
@@ -344,7 +349,7 @@ function App() {
 
               {attachedFile && (
                 <div style={styles.activeUploaderStatusBadge}>
-                  <span style={styles.uploaderPulseDot}></span> MEMORY PIPELINE ATTACHED
+                  <span style={styles.uploaderPulseDot}></span> AUDIT MODE DETECTED
                 </div>
               )}
             </div>
@@ -352,16 +357,16 @@ function App() {
 
         </div>
 
-        {/* Sharpe Ratio Explainer Text Banner */}
+        {/* Sharpe Telemetry Explainer Banner */}
         <div style={styles.splitTelemetryRow}>
           <section style={{...styles.educationalCard, margin: 0, flex: 1.2}}>
             <h3 style={styles.cardTitle}>🧠 Sharpe Ratio Core Metric: Risk-Adjusted Return Performance</h3>
             <p style={styles.educationalText}>
-              The **Sharpe Ratio** tracks your excess returns relative to the portfolio's underlying mathematical volatility. Higher metrics (&gt;1.5) indicate structural alpha generation.
+              The **Sharpe Ratio** tracks excess returns relative to the portfolio's volatility parameters. Higher metrics (&gt;1.5) indicate capital allocation alpha generation.
             </p>
           </section>
 
-          {data && data.market_macro && (
+          {data && data.market_macro && !attachedFile && (
             <section style={{...styles.educationalCard, margin: 0, flex: 1, borderLeft: '4px solid #58a6ff', backgroundColor: '#0b162a'}}>
               <h3 style={styles.cardTitle}>🌐 {data.market_macro.index_name} Index Macro Telemetry</h3>
               <div style={styles.macroTelemetryGrid}>
@@ -375,13 +380,7 @@ function App() {
                 </div>
                 <div>
                   <div style={{fontSize: '11px', color: '#8b949e'}}>PORTFOLIO P/E GAUGE</div>
-                  <div style={{
-                    fontSize: '14px', 
-                    fontWeight: 'bold', 
-                    color: data.market_macro.portfolio_avg_pe > data.market_macro.index_pe ? '#ef4444' : '#34d399'
-                  }}>
-                    {data.market_macro.portfolio_avg_pe}
-                  </div>
+                  <div style={{fontSize: '14px', fontWeight: 'bold', color: data.market_macro.portfolio_avg_pe > data.market_macro.index_pe ? '#ef4444' : '#34d399'}}>{data.market_macro.portfolio_avg_pe}</div>
                 </div>
               </div>
             </section>
@@ -390,146 +389,123 @@ function App() {
 
         {error && <div style={styles.errorCard}>⚠️ ERROR: {error}</div>}
 
-        {data && data.optimized_portfolio && (
+        {/* --- DYNAMIC PACKAGING WORKSPACE DESK RENDERING ROUTER --- */}
+        {data && (
           <div style={{marginTop: '24px'}}>
-            {/* KPI Telemetry Panels */}
-            <div style={styles.kpiGrid}>
-              <div style={styles.kpiCard}>
-                <div style={styles.kpiLabel}>TOTAL ALLOCATED CAPITAL</div>
-                <div style={{...styles.kpiValue, color: '#58a6ff'}}>
-                  {currencySymbol}{(data.profile?.investment_amount || amount).toLocaleString('en-IN')}
+            
+            {/* MODE A: IF NO PDF IS ATTACHED -> GENERATE THE MATHEMATICAL QUANT DESK */}
+            {!attachedFile && data.optimized_portfolio && (
+              <>
+                <div style={styles.kpiGrid}>
+                  <div style={styles.kpiCard}>
+                    <div style={styles.kpiLabel}>TOTAL ALLOCATED CAPITAL</div>
+                    <div style={{...styles.kpiValue, color: '#58a6ff'}}>{currencySymbol}{(data.profile?.investment_amount || amount).toLocaleString('en-IN')}</div>
+                  </div>
+                  <div style={styles.kpiCard}>
+                    <div style={styles.kpiLabel}>SHARPE RATIO ENGINE</div>
+                    <div style={{...styles.kpiValue, color: data.sharpe_ratio > 1.0 ? '#34d399' : '#f59e0b'}}>SR {data.sharpe_ratio || 0.0}</div>
+                  </div>
+                  <div style={styles.kpiCard}>
+                    <div style={styles.kpiLabel}>LIVE RISK-FREE BASELINE</div>
+                    <div style={{...styles.kpiValue, color: '#a855f7'}}>{data.risk_free_rate || 6.75}%</div>
+                  </div>
+                  <div style={styles.kpiCard}>
+                    <div style={styles.kpiLabel}>ESTIMATED PORTFOLIO YIELD (CAGR)</div>
+                    <div style={{...styles.kpiValue, color: '#34d399'}}>{data.expected_portfolio_return || 0}%</div>
+                  </div>
                 </div>
-              </div>
-              <div style={styles.kpiCard}>
-                <div style={styles.kpiLabel}>SHARPE RATIO ENGINE</div>
-                <div style={{...styles.kpiValue, color: data.sharpe_ratio > 1.0 ? '#34d399' : '#f59e0b'}}>
-                  SR {data.sharpe_ratio || 0.0}
-                </div>
-              </div>
-              <div style={styles.kpiCard}>
-                <div style={styles.kpiLabel}>LIVE RISK-FREE BASELINE</div>
-                <div style={{...styles.kpiValue, color: '#a855f7'}}>{data.risk_free_rate || 6.75}%</div>
-              </div>
-              <div style={styles.kpiCard}>
-                <div style={styles.kpiLabel}>ESTIMATED PORTFOLIO YIELD (CAGR)</div>
-                <div style={{...styles.kpiValue, color: '#34d399'}}>{data.expected_portfolio_return || 0}%</div>
-              </div>
-            </div>
 
-            {/* Recharts Timeline */}
-            {data.backtest_trajectory && data.backtest_trajectory.length > 0 && (
-              <section style={{...styles.card, marginBottom: '24px', border: '1px solid #1f242e'}}>
-                <h3 style={styles.cardTitle}>📈 Portfolio Growth Engine Timeline Forecast</h3>
-                <div style={{ width: '100%', height: 240, marginTop: '10px' }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={data.backtest_trajectory} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#161b26" vertical={false} />
-                      <XAxis dataKey="label" stroke="#6e7681" tickLine={false} style={{ fontSize: '11px' }} />
-                      <YAxis stroke="#6e7681" tickLine={false} style={{ fontSize: '11px' }} tickFormatter={(v) => `${currencySymbol}${Math.round(v).toLocaleString('en-IN')}`} />
-                      <Tooltip contentStyle={{ backgroundColor: '#0d111a', borderColor: '#2d3545', borderRadius: '8px' }} itemStyle={{ color: '#58a6ff', fontSize: '12px' }} formatter={(value) => [`${currencySymbol}${Number(value).toLocaleString('en-IN')}`, 'Portfolio Valuation']} />
-                      <Line type="monotone" dataKey="valuation" stroke="#58a6ff" strokeWidth={3} dot={{ r: 3, stroke: '#58a6ff', strokeWidth: 2, fill: '#070a13' }} />
-                    </LineChart>
-                  </ResponsiveContainer>
+                {data.backtest_trajectory && data.backtest_trajectory.length > 0 && (
+                  <section style={{...styles.card, marginBottom: '24px', border: '1px solid #1f242e'}}>
+                    <h3 style={styles.cardTitle}>📈 Portfolio Growth Engine Timeline Forecast</h3>
+                    <div style={{ width: '100%', height: 240, marginTop: '10px' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={data.backtest_trajectory}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#161b26" vertical={false} />
+                          <XAxis dataKey="label" stroke="#6e7681" style={{ fontSize: '11px' }} />
+                          <YAxis stroke="#6e7681" style={{ fontSize: '11px' }} tickFormatter={(v) => `${currencySymbol}${Math.round(v).toLocaleString('en-IN')}`} />
+                          <Tooltip contentStyle={{ backgroundColor: '#0d111a', borderColor: '#2d3545' }} formatter={(value) => [`${currencySymbol}${Number(value).toLocaleString('en-IN')}`, 'Portfolio Value']} />
+                          <Line type="monotone" dataKey="valuation" stroke="#58a6ff" strokeWidth={3} dot={false} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </section>
+                )}
+
+                <div style={{marginBottom: '24px'}}>
+                  <div style={styles.card}>
+                    <h3 style={styles.cardTitle}>📊 Optimal Asset Matrix & Fundamental Screener</h3>
+                    <div style={styles.tableWrapper}>
+                      <table style={styles.table}>
+                        <thead>
+                          <tr>
+                            <th style={styles.th}>SYMBOL</th>
+                            <th style={styles.th}>PRICE</th>
+                            <th style={styles.th}>VOLATILITY (BETA)</th>
+                            <th style={styles.th}>P/E RATIO</th>
+                            <th style={styles.th}>DIV YIELD</th>
+                            <th style={styles.th}>WEIGHT</th>
+                            <th style={styles.th}>SHARES</th>
+                            <th style={styles.th}>NET SPENT</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {data.optimized_portfolio.map((asset, idx) => (
+                            <tr key={idx} style={styles.tr}>
+                              <td style={styles.td}>
+                                <span style={styles.tickerBadge}>{asset.symbol}</span>
+                                {checkIsOvervalued(asset.pe_ratio) && <span style={styles.valuationAlertTag}>⚠️ OVERVALUED</span>}
+                              </td>
+                              <td style={styles.td}>{currencySymbol}{(asset.current_price || 0).toLocaleString('en-IN')}</td>
+                              <td style={{...styles.td, color: getRiskColor(asset.beta > 1.1 ? 'aggressive' : asset.beta >= 0.85 ? 'moderate' : 'conservative')}}>β {asset.beta}</td>
+                              <td style={styles.td}>{asset.pe_ratio || 'N/A'}</td>
+                              <td style={{...styles.td, color: '#34d399'}}>{asset.dividend_yield || 0}%</td>
+                              <td style={styles.td}>{asset.allocation_percentage}%</td>
+                              <td style={styles.td}><strong style={styles.shareCount}>{asset.suggested_shares_to_buy}</strong></td>
+                              <td style={styles.td}>{currencySymbol}{(asset.actual_deployment_cost || 0).toLocaleString('en-IN')}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 </div>
-              </section>
+
+                <div style={styles.adversarialGrid} className="adversarial-grid-responsive">
+                  <div style={styles.card}>
+                    <h3 style={{...styles.cardTitle, color: '#34d399', borderBottom: '1px solid rgba(52,211,153,0.2)'}}>🟢 BULL CASE ANALYST: MARKET ASSET CONVICTION</h3>
+                    <div style={styles.reportBlock}>{renderIntelligenceBlock(data.report_bull, '#34d399', 'PORTFOLIO BULL')}</div>
+                  </div>
+                  <div style={styles.card}>
+                    <h3 style={{...styles.cardTitle, color: '#ef4444', borderBottom: '1px solid rgba(239,68,68,0.2)'}}>🔴 BEAR CASE ANALYST: PORTFOLIO EXPOSURE HAZARDS</h3>
+                    <div style={styles.reportBlock}>{renderIntelligenceBlock(data.report_bear, '#ef4444', 'PORTFOLIO BEAR')}</div>
+                  </div>
+                </div>
+              </>
             )}
 
-            {/* Asset Matrix Spreadsheet */}
-            <div style={{marginBottom: '24px'}}>
-              <div style={styles.card}>
-                <h3 style={styles.cardTitle}>📊 Optimal Asset Matrix & Fundamental Screener</h3>
-                <div style={styles.tableWrapper}>
-                  <table style={styles.table}>
-                    <thead>
-                      <tr>
-                        <th style={styles.th}>SYMBOL</th>
-                        <th style={styles.th}>PRICE</th>
-                        <th style={styles.th}>VOLATILITY (BETA)</th>
-                        <th style={styles.th}>P/E RATIO</th>
-                        <th style={styles.th}>DIV YIELD</th>
-                        <th style={styles.th}>WEIGHT</th>
-                        <th style={styles.th}>SHARES</th>
-                        <th style={styles.th}>NET SPENT</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.optimized_portfolio.map((asset, idx) => {
-                        const betaValue = asset.beta || 0;
-                        const peValue = asset.pe_ratio || 0;
-                        return (
-                          <tr key={idx} style={styles.tr}>
-                            <td style={styles.td}>
-                              <span style={styles.tickerBadge}>{asset.symbol}</span>
-                              {checkIsOvervalued(peValue) && <span style={styles.valuationAlertTag}>⚠️ OVERVALUED</span>}
-                            </td>
-                            <td style={styles.td}>{currencySymbol}{(asset.current_price || 0).toLocaleString('en-IN')}</td>
-                            <td style={{...styles.td, color: getRiskColor(betaValue > 1.1 ? 'aggressive' : betaValue >= 0.85 ? 'moderate' : 'conservative')}}>β {betaValue}</td>
-                            <td style={styles.td}>{peValue > 0 ? peValue : 'N/A'}</td>
-                            <td style={{...styles.td, color: '#34d399'}}>{asset.dividend_yield || 0}%</td>
-                            <td style={styles.td}>{asset.allocation_percentage || 0}%</td>
-                            <td style={styles.td}><strong style={styles.shareCount}>{asset.suggested_shares_to_buy || 0}</strong></td>
-                            <td style={styles.td}>{currencySymbol}{(asset.actual_deployment_cost || 0).toLocaleString('en-IN')}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-
-            {/* CORE ADVERSARIAL STOCK STRATEGY DEBATE LAYOUT BANNER */}
-            <div style={styles.adversarialGrid} className="adversarial-grid-responsive">
-              <div style={styles.card}>
-                <h3 style={{...styles.cardTitle, color: '#34d399', borderBottom: '1px solid rgba(52,211,153,0.2)'}}>
-                  🟢 BULL CASE ANALYST: MARKET ASSET CONVICTION
-                </h3>
-                <div style={styles.reportBlock}>
-                  {renderIntelligenceBlock(
-                    // Filter out document facts from core matrix analysis text paths
-                    typeof data.report_bull === 'object' ? data.report_bull : String(data.report_bull), 
-                    '#34d399', 'PORTFOLIO BULL'
-                  )}
-                </div>
-              </div>
-
-              <div style={styles.card}>
-                <h3 style={{...styles.cardTitle, color: '#ef4444', borderBottom: '1px solid rgba(239,68,68,0.2)'}}>
-                  🔴 BEAR CASE ANALYST: PORTFOLIO EXPOSURE HAZARDS
-                </h3>
-                <div style={styles.reportBlock}>
-                  {renderIntelligenceBlock(
-                    typeof data.report_bear === 'object' ? data.report_bear : String(data.report_bear), 
-                    '#ef4444', 'PORTFOLIO BEAR'
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* ISOLATED COMPANION SECTION VIEW: Only renders down when a PDF attachment is processed by backend loops */}
+            {/* MODE B: IF FILE IS UPLOADED -> PIVOT INTERFACE TO DEDICATED REPORT SUMMARY MODE */}
             {attachedFile && (
-              <div style={{marginTop: '24px'}}>
-                <div style={{...styles.card, border: '1px solid #1e293b', backgroundColor: '#090f1c'}}>
-                  <h3 style={{...styles.cardTitle, color: '#38bdf8', borderBottom: '1px solid rgba(56,189,248,0.2)', display: 'flex', alignItems: 'center', gap: '8px'}}>
-                    <span>📑</span> EXTRACTED FINANCIAL RAG EXCERPTS & CORPORATE VERIFICATIONS
-                  </h3>
-                  <p style={{fontSize: '12px', color: '#8b949e', marginTop: '-8px', marginBottom: '16px'}}>
-                    The following metrics represent grounded auditing logs unpacked exclusively from your attached corporate statement.
-                  </p>
-                  
-                  <div style={styles.ragDisplayGridResp} className="adversarial-grid-responsive">
-                    <div style={styles.ragExtractSubPane}>
-                      <h4 style={{fontSize: '12px', color: '#34d399', margin: '0 0 10px 0', fontWeight: 'bold'}}>✨ AGENT POSITIVE CONTEXT METRICS</h4>
-                      <div style={styles.reportBlock}>
-                        {renderIntelligenceBlock(data.report_bull, '#34d399', 'DOCUMENT ACCENTS')}
-                      </div>
+              <div style={{...styles.card, border: '1px solid #0284c7', backgroundColor: '#090f1c'}}>
+                <h3 style={{...styles.cardTitle, color: '#38bdf8', borderBottom: '1px solid rgba(56,189,248,0.2)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
+                  <span>📑</span> DEDICATED CORPORATE EARNINGS INTELLIGENCE AUDIT: {attachedFile.name.toUpperCase()}
+                </h3>
+                <p style={{fontSize: '12px', color: '#8b949e', marginTop: '0', marginBottom: '24px', lineHeight: '1.5'}}>
+                  Asset weight calculations bypassed. System is operating in full-screen Document Audit Mode, running isolated textual summaries and balancing risk vectors from the document context.
+                </p>
+                
+                <div style={styles.ragDisplayGridResp} className="adversarial-grid-responsive">
+                  <div style={styles.ragExtractSubPane}>
+                    <h4 style={{fontSize: '12px', color: '#34d399', margin: '0 0 12px 0', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid rgba(52,211,153,0.1)', paddingBottom: '6px'}}>✨ EXTRACTED REVENUE WINS & STRATEGIC HIGHLIGHTS</h4>
+                    <div style={styles.reportBlock}>
+                      {renderIntelligenceBlock(data.doc_bull || data.report_bull, '#34d399', 'DOCUMENT WIN')}
                     </div>
-                    
-                    <div style={styles.ragExtractSubPane}>
-                      <h4 style={{fontSize: '12px', color: '#ef4444', margin: '0 0 10px 0', fontWeight: 'bold'}}>⚠️ AGENT DEFENSIVE RISK VECTOR CROSS-EXAMINATIONS</h4>
-                      <div style={styles.reportBlock}>
-                        {renderIntelligenceBlock(data.report_bear, '#ef4444', 'DOCUMENT DISCLOSURES')}
-                      </div>
+                  </div>
+                  
+                  <div style={styles.ragExtractSubPane}>
+                    <h4 style={{fontSize: '12px', color: '#ef4444', margin: '0 0 12px 0', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid rgba(239,68,68,0.1)', paddingBottom: '6px'}}>⚠️ DISCLOSED BALANCE SHEET RISKS & PRESSURE EXPOSURES</h4>
+                    <div style={styles.reportBlock}>
+                      {renderIntelligenceBlock(data.doc_bear || data.report_bear, '#ef4444', 'DOCUMENT RISK')}
                     </div>
                   </div>
                 </div>
@@ -559,9 +535,8 @@ const styles = {
   marketTab: { flex: 1, backgroundColor: 'transparent', border: 'none', color: '#8b949e', padding: '12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s' },
   activeMarketTab: { backgroundColor: '#1c2333', color: '#58a6ff', border: '1px solid #2d3545' },
   
-  // THREE-COLUMN ASSIGNMENT GRID CONFIG
-  mainWorkspaceLayout: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', marginBottom: '24px' },
-  inputConfigLayout: { display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '24px', marginBottom: '24px' },
+  // THREE-COLUMN ASSIGNMENT GRID STYLINGS
+  mainWorkspaceLayout: { display: 'grid', gridTemplateColumns: '1fr 1.1fr 0.9fr', gap: '24px', marginBottom: '24px' },
   controlCard: { backgroundColor: '#0d111a', border: '1px solid #1f242e', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' },
   sectionHeader: { fontSize: '13px', color: '#8b949e', textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '1px', borderBottom: '1px solid #1f242e', paddingBottom: '8px', fontWeight: '700' },
   formStack: { display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', justifyContent: 'space-between' },
@@ -569,18 +544,18 @@ const styles = {
   grid2Col: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
   textarea: { backgroundColor: '#141822', border: '1px solid #2d3545', borderRadius: '8px', color: '#e6edf3', padding: '16px', fontSize: '13px', minHeight: '130px', resize: 'none', outline: 'none', lineHeight: '1.6', fontFamily: 'inherit' },
   
-  // THREE-COLUMN WIDGET SEPARATED AREA STYLING 
+  // MODULAR FILE BOX DISPLAY
   separatedUploaderLayout: { display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'flex-start' },
-  pdfDropZone: { border: '1px dashed #2d3545', backgroundColor: '#141822', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' },
+  pdfDropZone: { border: '1px dashed #2d3545', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' },
   pdfLabelUpload: { fontSize: '11px', color: '#8b949e', cursor: 'pointer', display: 'block', lineHeight: '1.4' },
   fileSuccessRow: { display: 'flex', alignItems: 'center', backgroundColor: '#0d191b', border: '1px solid #1b4431', borderRadius: '6px', padding: '10px 14px', gap: '12px', width: '100%', boxSizing: 'border-box' },
   removeFileBtn: { marginLeft: 'auto', backgroundColor: 'transparent', border: 'none', color: '#f85149', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', padding: '4px' },
-  activeUploaderStatusBadge: { marginTop: '14px', alignSelf: 'center', backgroundColor: 'rgba(52,211,153,0.06)', border: '1px solid #1b4431', color: '#34d399', borderRadius: '20px', padding: '5px 12px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' },
-  uploaderPulseDot: { width: '6px', height: '6px', backgroundColor: '#34d399', borderRadius: '50%', display: 'inline-block', animate: 'pulse 2s infinite' },
+  activeUploaderStatusBadge: { marginTop: '14px', alignSelf: 'center', backgroundColor: 'rgba(56,189,248,0.06)', border: '1px solid #1e293b', color: '#38bdf8', borderRadius: '20px', padding: '5px 12px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' },
+  uploaderPulseDot: { width: '6px', height: '6px', backgroundColor: '#38bdf8', borderRadius: '50%', display: 'inline-block' },
   
-  // EXTRACTION FOOTER BLOCKS
+  // REPORT SEPARATION FLEX TARGETS
   ragDisplayGridResp: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },
-  ragExtractSubPane: { backgroundColor: '#0c1220', border: '1px solid #1e293b', padding: '16px', borderRadius: '8px' },
+  ragExtractSubPane: { backgroundColor: '#0c1220', border: '1px solid #1e293b', padding: '20px', borderRadius: '8px' },
 
   submitButton: { backgroundColor: '#238636', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '14px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontFamily: 'inherit', marginTop: '4px' },
   sliderGroup: { display: 'flex', flexDirection: 'column', gap: '4px' },
@@ -599,7 +574,6 @@ const styles = {
   kpiCard: { backgroundColor: '#0d111a', border: '1px solid #1f242e', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '6px' },
   kpiLabel: { color: '#8b949e', fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.6px' },
   kpiValue: { fontSize: '20px', fontWeight: '800' },
-  chartExplanationBox: { backgroundColor: '#141b2e', border: '1px solid #23355c', borderRadius: '8px', padding: '14px', marginTop: '20px' },
   card: { backgroundColor: '#0d111a', border: '1px solid #1f242e', borderRadius: '12px', padding: '24px' },
   cardTitle: { color: '#e6edf3', fontSize: '14px', fontWeight: 'bold', borderBottom: '1px solid #1f242e', paddingBottom: '12px', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '0.5px' },
   tableWrapper: { overflowX: 'auto', width: '100%' },
