@@ -63,7 +63,6 @@ function App() {
       formDataBody.append('horizon_strategy', horizonStrategy);
       formDataBody.append('target_profit_percentage', Number(targetProfit));
       
-      // Hand off sectors explicitly down the multi-part data payload stream
       activeSectors.forEach((sector) => {
         formDataBody.append('sectors', sector);
       });
@@ -96,8 +95,7 @@ function App() {
     const currency = market === 'american' ? 'USD' : 'INR';
     const sectorsToPass = selectedSectors.length > 0 ? selectedSectors : ['Technology'];
     
-    // Explicit structural sentence configuration to ensure regex matches pass smoothly
-    const synthesizedPrompt = `Allocate exactly ${amount} ${currency} for a investment window of ${horizon} years directly into the following sector matrix: ${sectorsToPass.join(', ')}. Strategy profile is ${horizonStrategy} targeting a risk matrix configuration of ${riskProfile}.`;
+    const synthesizedPrompt = `Allocate exactly ${amount} ${currency} for an investment window of ${horizon} years directly into the following sector matrix: ${sectorsToPass.join(', ')}. Strategy profile is ${horizonStrategy} targeting a risk matrix configuration of ${riskProfile}.`;
     executePipelineRequest(synthesizedPrompt, market, sectorsToPass);
   };
 
@@ -109,7 +107,6 @@ function App() {
     let structuredPrompt = prompt.trim();
     if (!structuredPrompt) return;
 
-    // SAFETY GUARD: If text is missing explicit parameters, append mathematical metadata to preserve regex parsing paths
     if (!structuredPrompt.includes(String(amount)) && !structuredPrompt.toLowerCase().includes('years')) {
       structuredPrompt += ` [Constraint Metadata Base Configuration Override: Deploy exactly ${amount} ${currency} over ${horizon} years]`;
     }
@@ -134,7 +131,6 @@ function App() {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
   };
 
-  // PARSING ENGINE: Seamless key-value flattening ensures nested JSON strings or objects unpack cleanly
   const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
     if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
     
@@ -193,17 +189,17 @@ function App() {
   return (
     <div style={styles.container}>
       <style>{`
-        @media (max-width: 1100px) {
+        @media (max-width: 1200px) {
           .input-layout-responsive { grid-template-columns: 1fr !important; }
           .grid-2col-responsive { grid-template-columns: 1fr !important; }
           .header-responsive { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
           .adversarial-grid-responsive { grid-template-columns: 1fr !important; }
+          .main-workspace-layout { grid-template-columns: 1fr !important; }
         }
       `}</style>
 
       <header style={styles.header} className="header-responsive">
         <div>
-          {/* USER HEADLINE PREFERENCE COMPLIANCE */}
           <h1 style={styles.title}>QUANT-LLM ADVISOR TERMINAL</h1>
           <div style={styles.underlineContainer}>
             <div style={styles.centerBlueLine}></div>
@@ -220,7 +216,10 @@ function App() {
           <button type="button" style={{...styles.marketTab, ...(market === 'american' ? styles.activeMarketTab : {})}} onClick={() => { setMarket('american'); setAmount(5000); setData(null); }}>🇺🇸 US DESK</button>
         </div>
 
-        <div style={styles.inputConfigLayout} className="input-layout-responsive">
+        {/* THREE-COLUMN WORKSPACE: Separating parameters from document uploads completely */}
+        <div style={styles.mainWorkspaceLayout} className="main-workspace-layout">
+          
+          {/* Column 1: Core AI Text Interface */}
           <section style={styles.controlCard}>
             <h2 style={styles.sectionHeader}>🤖 AI Prompt Interface</h2>
             <div style={styles.formStack}>
@@ -228,43 +227,21 @@ function App() {
                 style={styles.textarea}
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder={`Describe your investment goals for the ${market} desk... (e.g., Allocate 75000 over 2 years in tech stocks)`}
+                placeholder={`Describe your investment goals for the ${market} desk...`}
                 disabled={loading}
               />
-              
-              {/* Context Augmentation Report Dropzone File Slot */}
-              <div style={styles.pdfDropZone}>
-                <div style={{fontSize: '11px', color: '#8b949e', fontWeight: 'bold', marginBottom: '6px', textTransform: 'uppercase'}}>
-                  📁 Context Augmentation: Corporate Report (Optional)
-                </div>
-                {!attachedFile ? (
-                  <label style={styles.pdfLabelUpload}>
-                    <input type="file" accept=".pdf" onChange={handleFileDropChange} style={{display: 'none'}} />
-                    <span style={{color: '#58a6ff', cursor: 'pointer'}}>Click to upload quarterly report PDF</span> or drag file here
-                  </label>
-                ) : (
-                  <div style={styles.fileSuccessRow}>
-                    <span style={styles.fileIcon}>📄</span>
-                    <div style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '240px'}}>
-                      <strong style={{color: '#34d399', fontSize: '12px'}}>{attachedFile.name}</strong>
-                    </div>
-                    <button type="button" onClick={removeAttachedFile} style={styles.removeFileBtn}>✕</button>
-                  </div>
-                )}
-              </div>
-
-              {/* CRITICAL BUTTON EVENT ISOLATION: Explicit type detaches it from standard document double-fires */}
               <button 
                 type="button" 
                 onClick={handlePromptSubmit} 
                 style={styles.submitButton} 
                 disabled={loading}
               >
-                {loading ? 'PROCESSING AUDIT COMPREHENSION...' : 'RUN AI PROMPT OPTIMIZATION'}
+                {loading ? 'RUNNING INFERENCE...' : 'RUN AI PROMPT OPTIMIZATION'}
               </button>
             </div>
           </section>
 
+          {/* Column 2: Hard Strategy Contraints Forms */}
           <section style={styles.controlCard}>
             <h2 style={styles.sectionHeader}>🎛️ Strategic Constraint Parameters</h2>
             <div style={styles.manualForm}>
@@ -289,7 +266,7 @@ function App() {
                   </select>
                 </div>
                 <div style={styles.sliderGroup}>
-                  <label style={styles.label}>Investment Timeline View:</label>
+                  <label style={styles.label}>Investment Timeline:</label>
                   <select value={horizonStrategy} onChange={(e) => setHorizonStrategy(e.target.value)} style={styles.select}>
                     <option value="long_term">Long-Term Compounding</option>
                     <option value="short_term">Capital Preservation</option>
@@ -299,11 +276,11 @@ function App() {
 
               <div style={styles.grid2Col} className="grid-2col-responsive">
                 <div style={styles.sliderGroup}>
-                  <label style={styles.label}>Expected Profit Margin: <strong>{targetProfit}% Target</strong></label>
+                  <label style={styles.label}>Expected Profit: <strong>{targetProfit}% Target</strong></label>
                   <input type="range" min="5" max="50" step="1" value={targetProfit} onChange={(e) => setTargetProfit(Number(e.target.value))} style={styles.slider} />
                 </div>
                 <div style={styles.sliderGroup}>
-                  <label style={styles.label}>Risk Allocation Core:</label>
+                  <label style={styles.label}>Risk Core Allocation:</label>
                   <select value={riskProfile} onChange={(e) => setRiskProfile(e.target.value)} style={styles.select}>
                     <option value="moderate">Moderate Strategy</option>
                     <option value="conservative">Conservative Strategy</option>
@@ -324,25 +301,63 @@ function App() {
                 </div>
               </div>
 
-              {/* CRITICAL BUTTON EVENT ISOLATION: Explicit type detaches it from parameter double-fires */}
               <button 
                 type="button" 
                 onClick={handleManualSubmit} 
                 style={{...styles.submitButton, backgroundColor: '#0284c7'}} 
                 disabled={loading}
               >
-                {loading ? 'RECALCULATING CORES...' : 'APPLY STRATEGIC MATRIX CONFIG'}
+                {loading ? 'COMPUTING VALUES...' : 'APPLY STRATEGIC MATRIX CONFIG'}
               </button>
             </div>
           </section>
+
+          {/* COLUMN 3: STANDALONE EXTRACTION COMPANION PACK WIDGET */}
+          <section style={{...styles.controlCard, borderColor: attachedFile ? '#1b4431' : '#1f242e'}}>
+            <h2 style={{...styles.sectionHeader, color: attachedFile ? '#34d399' : '#8b949e'}}>📑 Isolated Context Auditing Workspace</h2>
+            <div style={styles.separatedUploaderLayout}>
+              <p style={{fontSize: '11px', color: '#8b949e', margin: '0 0 12px 0', lineHeight: '1.5'}}>
+                Drop standard brokerage research PDF sheets or quarterly logs below. The engine splits and matches findings inside an independent processing track.
+              </p>
+              
+              <div style={{...styles.pdfDropZone, backgroundColor: attachedFile ? '#0d191b' : '#141822', minHeight: '110px', justifyContent: 'center'}}>
+                {!attachedFile ? (
+                  <label style={styles.pdfLabelUpload}>
+                    <input type="file" accept=".pdf" onChange={handleFileDropChange} style={{display: 'none'}} />
+                    <div style={{fontSize: '24px', marginBottom: '8px'}}>📁</div>
+                    <span style={{color: '#58a6ff', cursor: 'pointer', fontWeight: 'bold'}}>Upload Corporate PDF Filing</span>
+                    <div style={{fontSize: '10px', color: '#6e7681', marginTop: '4px'}}>Context will display in isolated layout blocks below</div>
+                  </label>
+                ) : (
+                  <div style={{...styles.fileSuccessRow, border: 'none', backgroundColor: 'transparent'}}>
+                    <span style={{fontSize: '22px'}}>📄</span>
+                    <div style={{display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden'}}>
+                      <span style={{color: '#34d399', fontSize: '12px', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px'}}>
+                        {attachedFile.name}
+                      </span>
+                      <span style={{fontSize: '10px', color: '#8b949e'}}>Filing Active (&lt;5 Pages Buffered)</span>
+                    </div>
+                    <button type="button" onClick={removeAttachedFile} style={styles.removeFileBtn}>✕</button>
+                  </div>
+                )}
+              </div>
+
+              {attachedFile && (
+                <div style={styles.activeUploaderStatusBadge}>
+                  <span style={styles.uploaderPulseDot}></span> MEMORY PIPELINE ATTACHED
+                </div>
+              )}
+            </div>
+          </section>
+
         </div>
 
-        {/* Structural Telemetry Layout Row */}
+        {/* Sharpe Ratio Explainer Text Banner */}
         <div style={styles.splitTelemetryRow}>
           <section style={{...styles.educationalCard, margin: 0, flex: 1.2}}>
             <h3 style={styles.cardTitle}>🧠 Sharpe Ratio Core Metric: Risk-Adjusted Return Performance</h3>
             <p style={styles.educationalText}>
-              The **Sharpe Ratio** tracks your excess returns relative to the portfolio's underlying mathematical volatility. Higher metrics (&gt;1.5) indicate the current distribution is generating structural alpha per unit of capital risk, rather than simply hunting beta.
+              The **Sharpe Ratio** tracks your excess returns relative to the portfolio's underlying mathematical volatility. Higher metrics (&gt;1.5) indicate structural alpha generation.
             </p>
           </section>
 
@@ -365,10 +380,7 @@ function App() {
                     fontWeight: 'bold', 
                     color: data.market_macro.portfolio_avg_pe > data.market_macro.index_pe ? '#ef4444' : '#34d399'
                   }}>
-                    {data.market_macro.portfolio_avg_pe} 
-                    <span style={{fontSize: '10px', marginLeft: '4px'}}>
-                      {data.market_macro.portfolio_avg_pe > data.market_macro.index_pe ? '(Premium)' : '(Discount)'}
-                    </span>
+                    {data.market_macro.portfolio_avg_pe}
                   </div>
                 </div>
               </div>
@@ -380,7 +392,7 @@ function App() {
 
         {data && data.optimized_portfolio && (
           <div style={{marginTop: '24px'}}>
-            {/* KPI Telemetry Metrics */}
+            {/* KPI Telemetry Panels */}
             <div style={styles.kpiGrid}>
               <div style={styles.kpiCard}>
                 <div style={styles.kpiLabel}>TOTAL ALLOCATED CAPITAL</div>
@@ -404,53 +416,25 @@ function App() {
               </div>
             </div>
 
-            {/* Backtest Trajectory Map */}
+            {/* Recharts Timeline */}
             {data.backtest_trajectory && data.backtest_trajectory.length > 0 && (
               <section style={{...styles.card, marginBottom: '24px', border: '1px solid #1f242e'}}>
                 <h3 style={styles.cardTitle}>📈 Portfolio Growth Engine Timeline Forecast</h3>
-                <p style={{fontSize: '12px', color: '#8b949e', marginTop: '-10px', marginBottom: '20px'}}>
-                  This vector timeline charts your compounded valuation trajectory over the specified **{horizon} year** deployment target window.
-                </p>
-                
-                <div style={{ width: '100%', height: 260, marginTop: '20px' }}>
+                <div style={{ width: '100%', height: 240, marginTop: '10px' }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={data.backtest_trajectory} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#161b26" vertical={false} />
                       <XAxis dataKey="label" stroke="#6e7681" tickLine={false} style={{ fontSize: '11px' }} />
-                      <YAxis 
-                        stroke="#6e7681" 
-                        tickLine={false} 
-                        style={{ fontSize: '11px' }}
-                        tickFormatter={(v) => `${currencySymbol}${Math.round(v).toLocaleString('en-IN')}`} 
-                      />
-                      <Tooltip 
-                        contentStyle={{ backgroundColor: '#0d111a', borderColor: '#2d3545', borderRadius: '8px' }}
-                        itemStyle={{ color: '#58a6ff', fontSize: '12px' }}
-                        labelStyle={{ color: '#8b949e', fontSize: '11px', fontWeight: 'bold' }}
-                        formatter={(value) => [`${currencySymbol}${Number(value).toLocaleString('en-IN')}`, 'Portfolio Valuation']}
-                      />
-                      <Line 
-                        type="monotone" 
-                        dataKey="valuation" 
-                        stroke="#58a6ff" 
-                        strokeWidth={3} 
-                        dot={{ r: 3, stroke: '#58a6ff', strokeWidth: 2, fill: '#070a13' }}
-                        activeDot={{ r: 6 }} 
-                      />
+                      <YAxis stroke="#6e7681" tickLine={false} style={{ fontSize: '11px' }} tickFormatter={(v) => `${currencySymbol}${Math.round(v).toLocaleString('en-IN')}`} />
+                      <Tooltip contentStyle={{ backgroundColor: '#0d111a', borderColor: '#2d3545', borderRadius: '8px' }} itemStyle={{ color: '#58a6ff', fontSize: '12px' }} formatter={(value) => [`${currencySymbol}${Number(value).toLocaleString('en-IN')}`, 'Portfolio Valuation']} />
+                      <Line type="monotone" dataKey="valuation" stroke="#58a6ff" strokeWidth={3} dot={{ r: 3, stroke: '#58a6ff', strokeWidth: 2, fill: '#070a13' }} />
                     </LineChart>
                   </ResponsiveContainer>
-                </div>
-
-                <div style={styles.chartExplanationBox}>
-                  <span style={{color: '#a855f7', fontWeight: 'bold', fontSize: '12px'}}>🔍 Forecast Summary Analytics:</span>
-                  <p style={{fontSize: '12px', color: '#94a3b8', marginTop: '4px', lineHeight: '1.6', margin: 0}}>
-                    Starting with an active asset allocation baseline of <strong>{currencySymbol}{Math.round(data.backtest_trajectory[0]?.valuation || 0).toLocaleString('en-IN')} {currencyCode}</strong>, your optimized portfolio captures a projected compounded annual yield of <strong>{data.expected_portfolio_return}%</strong>. Compounding expands your baseline out to an estimated terminal valuation of <strong style={{color: '#34d399'}}>{currencySymbol}{Math.round(data.backtest_trajectory[data.backtest_trajectory.length - 1]?.valuation || 0).toLocaleString('en-IN')} {currencyCode}</strong>.
-                  </p>
                 </div>
               </section>
             )}
 
-            {/* Asset Matrix Spreadsheet Card */}
+            {/* Asset Matrix Spreadsheet */}
             <div style={{marginBottom: '24px'}}>
               <div style={styles.card}>
                 <h3 style={styles.cardTitle}>📊 Optimal Asset Matrix & Fundamental Screener</h3>
@@ -476,14 +460,10 @@ function App() {
                           <tr key={idx} style={styles.tr}>
                             <td style={styles.td}>
                               <span style={styles.tickerBadge}>{asset.symbol}</span>
-                              {checkIsOvervalued(peValue) && (
-                                <span style={styles.valuationAlertTag}>⚠️ OVERVALUED</span>
-                              )}
+                              {checkIsOvervalued(peValue) && <span style={styles.valuationAlertTag}>⚠️ OVERVALUED</span>}
                             </td>
                             <td style={styles.td}>{currencySymbol}{(asset.current_price || 0).toLocaleString('en-IN')}</td>
-                            <td style={{...styles.td, color: getRiskColor(betaValue > 1.1 ? 'aggressive' : betaValue >= 0.85 ? 'moderate' : 'conservative')}}>
-                              β {betaValue}
-                            </td>
+                            <td style={{...styles.td, color: getRiskColor(betaValue > 1.1 ? 'aggressive' : betaValue >= 0.85 ? 'moderate' : 'conservative')}}>β {betaValue}</td>
                             <td style={styles.td}>{peValue > 0 ? peValue : 'N/A'}</td>
                             <td style={{...styles.td, color: '#34d399'}}>{asset.dividend_yield || 0}%</td>
                             <td style={styles.td}>{asset.allocation_percentage || 0}%</td>
@@ -498,26 +478,63 @@ function App() {
               </div>
             </div>
 
-            {/* ADVERSARIAL AGENT INTELLIGENCE SIDE-BY-SIDE PANELS */}
+            {/* CORE ADVERSARIAL STOCK STRATEGY DEBATE LAYOUT BANNER */}
             <div style={styles.adversarialGrid} className="adversarial-grid-responsive">
               <div style={styles.card}>
                 <h3 style={{...styles.cardTitle, color: '#34d399', borderBottom: '1px solid rgba(52,211,153,0.2)'}}>
-                  🟢 BULL CASE ANALYST: GROWTH CONVICTION
+                  🟢 BULL CASE ANALYST: MARKET ASSET CONVICTION
                 </h3>
                 <div style={styles.reportBlock}>
-                  {renderIntelligenceBlock(data.report_bull, '#34d399', 'BULL STRATEGY')}
+                  {renderIntelligenceBlock(
+                    // Filter out document facts from core matrix analysis text paths
+                    typeof data.report_bull === 'object' ? data.report_bull : String(data.report_bull), 
+                    '#34d399', 'PORTFOLIO BULL'
+                  )}
                 </div>
               </div>
 
               <div style={styles.card}>
                 <h3 style={{...styles.cardTitle, color: '#ef4444', borderBottom: '1px solid rgba(239,68,68,0.2)'}}>
-                  🔴 BEAR CASE ANALYST: RISK & HEADWINDS
+                  🔴 BEAR CASE ANALYST: PORTFOLIO EXPOSURE HAZARDS
                 </h3>
                 <div style={styles.reportBlock}>
-                  {renderIntelligenceBlock(data.report_bear, '#ef4444', 'RISK MITIGATION')}
+                  {renderIntelligenceBlock(
+                    typeof data.report_bear === 'object' ? data.report_bear : String(data.report_bear), 
+                    '#ef4444', 'PORTFOLIO BEAR'
+                  )}
                 </div>
               </div>
             </div>
+
+            {/* ISOLATED COMPANION SECTION VIEW: Only renders down when a PDF attachment is processed by backend loops */}
+            {attachedFile && (
+              <div style={{marginTop: '24px'}}>
+                <div style={{...styles.card, border: '1px solid #1e293b', backgroundColor: '#090f1c'}}>
+                  <h3 style={{...styles.cardTitle, color: '#38bdf8', borderBottom: '1px solid rgba(56,189,248,0.2)', display: 'flex', alignItems: 'center', gap: '8px'}}>
+                    <span>📑</span> EXTRACTED FINANCIAL RAG EXCERPTS & CORPORATE VERIFICATIONS
+                  </h3>
+                  <p style={{fontSize: '12px', color: '#8b949e', marginTop: '-8px', marginBottom: '16px'}}>
+                    The following metrics represent grounded auditing logs unpacked exclusively from your attached corporate statement.
+                  </p>
+                  
+                  <div style={styles.ragDisplayGridResp} className="adversarial-grid-responsive">
+                    <div style={styles.ragExtractSubPane}>
+                      <h4 style={{fontSize: '12px', color: '#34d399', margin: '0 0 10px 0', fontWeight: 'bold'}}>✨ AGENT POSITIVE CONTEXT METRICS</h4>
+                      <div style={styles.reportBlock}>
+                        {renderIntelligenceBlock(data.report_bull, '#34d399', 'DOCUMENT ACCENTS')}
+                      </div>
+                    </div>
+                    
+                    <div style={styles.ragExtractSubPane}>
+                      <h4 style={{fontSize: '12px', color: '#ef4444', margin: '0 0 10px 0', fontWeight: 'bold'}}>⚠️ AGENT DEFENSIVE RISK VECTOR CROSS-EXAMINATIONS</h4>
+                      <div style={styles.reportBlock}>
+                        {renderIntelligenceBlock(data.report_bear, '#ef4444', 'DOCUMENT DISCLOSURES')}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
           </div>
         )}
@@ -530,7 +547,6 @@ const styles = {
   container: { backgroundColor: '#070a13', color: '#c9d1d9', minHeight: '100vh', fontFamily: '"Fira Code", monospace, system-ui', padding: '24px' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #161b26', paddingBottom: '20px', marginBottom: '24px', position: 'relative' },
   
-  // BRAND STYLING PREFERENCES COMPLIANCE (Precise Absolute Font & Center Underline Mappings)
   title: { color: '#58a6ff', fontSize: '24px', fontWeight: '800', letterSpacing: '1.2px', fontFamily: '"Absolute Vodka", "Fira Code", monospace', display: 'block', textAlign: 'left', width: 'fit-content' },
   underlineContainer: { width: '100%', display: 'flex', justifyContent: 'flex-start', marginTop: '2px' },
   centerBlueLine: { height: '3px', backgroundColor: '#58a6ff', width: '385px', borderRadius: '2px' },
@@ -542,28 +558,37 @@ const styles = {
   marketToggleRow: { display: 'flex', gap: '12px', marginBottom: '24px', backgroundColor: '#0d111a', padding: '8px', borderRadius: '12px', border: '1px solid #1f242e' },
   marketTab: { flex: 1, backgroundColor: 'transparent', border: 'none', color: '#8b949e', padding: '12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s' },
   activeMarketTab: { backgroundColor: '#1c2333', color: '#58a6ff', border: '1px solid #2d3545' },
+  
+  // THREE-COLUMN ASSIGNMENT GRID CONFIG
+  mainWorkspaceLayout: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', marginBottom: '24px' },
   inputConfigLayout: { display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '24px', marginBottom: '24px' },
   controlCard: { backgroundColor: '#0d111a', border: '1px solid #1f242e', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' },
   sectionHeader: { fontSize: '13px', color: '#8b949e', textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '1px', borderBottom: '1px solid #1f242e', paddingBottom: '8px', fontWeight: '700' },
   formStack: { display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', justifyContent: 'space-between' },
   manualForm: { display: 'flex', flexDirection: 'column', gap: '14px' },
   grid2Col: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
-  textarea: { backgroundColor: '#141822', border: '1px solid #2d3545', borderRadius: '8px', color: '#e6edf3', padding: '16px', fontSize: '13px', minHeight: '140px', resize: 'none', outline: 'none', lineHeight: '1.6', fontFamily: 'inherit' },
+  textarea: { backgroundColor: '#141822', border: '1px solid #2d3545', borderRadius: '8px', color: '#e6edf3', padding: '16px', fontSize: '13px', minHeight: '130px', resize: 'none', outline: 'none', lineHeight: '1.6', fontFamily: 'inherit' },
   
-  // MULTIPART PDF DROPZONE UI DISPLAY
-  pdfDropZone: { border: '1px dashed #2d3545', backgroundColor: '#141822', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column' },
-  pdfLabelUpload: { fontSize: '11px', color: '#8b949e', textAlign: 'center', padding: '10px', cursor: 'pointer', display: 'block' },
-  fileSuccessRow: { display: 'flex', alignItems: 'center', backgroundColor: '#0d191b', border: '1px solid #1b4431', borderRadius: '6px', padding: '6px 12px', gap: '8px' },
-  fileIcon: { fontSize: '14px' },
-  removeFileBtn: { marginLeft: 'auto', backgroundColor: 'transparent', border: 'none', color: '#f85149', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px' },
+  // THREE-COLUMN WIDGET SEPARATED AREA STYLING 
+  separatedUploaderLayout: { display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'flex-start' },
+  pdfDropZone: { border: '1px dashed #2d3545', backgroundColor: '#141822', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' },
+  pdfLabelUpload: { fontSize: '11px', color: '#8b949e', cursor: 'pointer', display: 'block', lineHeight: '1.4' },
+  fileSuccessRow: { display: 'flex', alignItems: 'center', backgroundColor: '#0d191b', border: '1px solid #1b4431', borderRadius: '6px', padding: '10px 14px', gap: '12px', width: '100%', boxSizing: 'border-box' },
+  removeFileBtn: { marginLeft: 'auto', backgroundColor: 'transparent', border: 'none', color: '#f85149', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', padding: '4px' },
+  activeUploaderStatusBadge: { marginTop: '14px', alignSelf: 'center', backgroundColor: 'rgba(52,211,153,0.06)', border: '1px solid #1b4431', color: '#34d399', borderRadius: '20px', padding: '5px 12px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' },
+  uploaderPulseDot: { width: '6px', height: '6px', backgroundColor: '#34d399', borderRadius: '50%', display: 'inline-block', animate: 'pulse 2s infinite' },
   
+  // EXTRACTION FOOTER BLOCKS
+  ragDisplayGridResp: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },
+  ragExtractSubPane: { backgroundColor: '#0c1220', border: '1px solid #1e293b', padding: '16px', borderRadius: '8px' },
+
   submitButton: { backgroundColor: '#238636', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '14px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontFamily: 'inherit', marginTop: '4px' },
-  sliderGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '12px', color: '#c9d1d9' },
+  sliderGroup: { display: 'flex', flexDirection: 'column', gap: '4px' },
+  label: { fontSize: '11px', color: '#8b949e' },
   slider: { width: '100%', cursor: 'pointer', accentColor: '#0284c7' },
-  select: { backgroundColor: '#141822', border: '1px solid #2d3545', borderRadius: '8px', color: '#e6edf3', padding: '10px', fontSize: '12px', outline: 'none', fontFamily: 'inherit' },
-  checkboxContainer: { display: 'flex', flexWrap: 'wrap', gap: '12px', backgroundColor: '#141822', padding: '10px', borderRadius: '8px', border: '1px solid #2d3545' },
-  checkboxLabel: { fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' },
+  select: { backgroundColor: '#141822', border: '1px solid #2d3545', borderRadius: '8px', color: '#e6edf3', padding: '8px 10px', fontSize: '12px', outline: 'none', fontFamily: 'inherit' },
+  checkboxContainer: { display: 'flex', flexWrap: 'wrap', gap: '8px', backgroundColor: '#141822', padding: '8px', borderRadius: '8px', border: '1px solid #2d3545' },
+  checkboxLabel: { fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' },
   checkbox: { cursor: 'pointer', accentColor: '#0284c7' },
   splitTelemetryRow: { display: 'flex', gap: '24px', alignItems: 'stretch', flexWrap: 'wrap', marginBottom: '24px' },
   educationalCard: { backgroundColor: '#0b1324', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px' },
