@@ -93,14 +93,27 @@ function App() {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
   };
 
+  // CRITICAL FIX: Hardened structure parsing engine that converts objects or arrays to strings safely before split operations
   const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
     if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
     
-    return rawText.split('\n').map((paragraph, idx) => {
+    // Fallback: If Groq returns an structured array or object, convert it safely to clear .split() requirements
+    let cleanString = "";
+    if (Array.isArray(rawText)) {
+      cleanString = rawText.join('\n');
+    } else if (typeof rawText === 'object') {
+      cleanString = JSON.stringify(rawText, null, 2);
+    } else {
+      cleanString = String(rawText);
+    }
+
+    return cleanString.split('\n').map((paragraph, idx) => {
       if (!paragraph.trim()) return null;
       
-      const cleanText = paragraph.replace(/\*\*/g, '');
-      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk'));
+      const cleanText = paragraph.replace(/\*\*/g, '').replace(/[\{\}\"\[\]\,]/g, '');
+      if (!cleanText.trim()) return null;
+
+      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk') || cleanText.toLowerCase().includes('case'));
       const isBulletStep = cleanText.trim().startsWith('-') || cleanText.trim().startsWith('*') || /^\d+\./.test(cleanText.trim());
 
       if (isHeaderLine) {
@@ -463,7 +476,6 @@ const styles = {
   educationalCard: { backgroundColor: '#0b1324', border: '1px solid #1e293b', borderRadius: '12px', padding: '16px' },
   educationalText: { fontSize: '12px', color: '#94a3b8', lineHeight: '1.6', marginTop: '4px' },
   macroTelemetryGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr 1.2fr', gap: '12px', marginTop: '8px' },
-  // FIXED: Syntax quote containment error safely handled to prevent compiler parsing blocks
   errorCard: { border: '1px solid #f85149', borderRadius: '8px', color: '#f85149', padding: '14px', marginBottom: '24px', fontSize: '13px', backgroundColor: 'rgba(248,81,73,0.07)' },
   kpiGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' },
   kpiCard: { backgroundColor: '#0d111a', border: '1px solid #1f242e', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '6px' },
