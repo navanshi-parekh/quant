@@ -6,3 +6,4 @@ python-dotenv
 typing_extensions
 httpx
 gunicorn
+pypdf==4.2.0
