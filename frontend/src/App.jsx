@@ -38,18 +38,21 @@ function App() {
     const file = e.target.files[0];
     if (file && file.type === 'application/pdf') {
       setAttachedFile(file);
+      setData(null); // Clear previous runs so screen is ready for audit
     } else {
       alert('Invalid file structure. Please drop or select an official corporate .pdf report.');
     }
   };
 
+  // COMPLETE WORKSPACE RESET ROUTINE (Eliminates the need for any page refreshes)
   const removeAttachedFile = () => {
     setAttachedFile(null);
-    setData(null);   // Wipes the data payload cache so the UI resets back to Stock Mode instantly
-    setPrompt('');   // Clears the text box for a fresh slate
+    setData(null);   
+    setPrompt('');   
+    setError(null);
   };
 
-  // CORE NETWORK CONTROLLER: Standardized transmission architecture ensuring form payloads map smoothly via multipart FormData
+  // CORE NETWORK CONTROLLER: Standardized transmission architecture utilizing form payloads via multipart FormData
   const executePipelineRequest = async (payloadPrompt, selectedMarket, activeSectors) => {
     setLoading(true);
     setError(null);
@@ -63,12 +66,12 @@ function App() {
       formDataBody.append('market', selectedMarket);
       formDataBody.append('diversification', diversification);
       formDataBody.append('horizon_strategy', horizonStrategy);
-      formDataBody.append('target_profit_percentage', Number(targetProfit));
+      formDataBody.append('target_profit_percentage', Summary(targetProfit));
       
-      // FIXED: Appends both key signatures to satisfy strict backend Pydantic validation expectations
+      // Fixed: Appends both key signatures to satisfy strict backend Pydantic validation models
       activeSectors.forEach((sector) => {
-        formDataBody.append('sectors', sector); // Plural fallback
-        formDataBody.append('sector', sector);  // Singular matching fix for image_8ccebc.png
+        formDataBody.append('sectors', sector); 
+        formDataBody.append('sector', sector);  
       });
       
       if (attachedFile) {
@@ -82,7 +85,6 @@ function App() {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ detail: 'Backend generation fault.' }));
-        // Format layout output strings safely to present nested pydantic arrays elegantly if a fault occurs
         const rawErrorMsg = errorData.detail ? (typeof errorData.detail === 'object' ? JSON.stringify(errorData.detail) : String(errorData.detail)) : 'Internal processing breakdown across endpoints.';
         throw new Error(rawErrorMsg);
       }
@@ -113,7 +115,6 @@ function App() {
     let structuredPrompt = prompt.trim();
     if (!structuredPrompt && !attachedFile) return;
 
-    // HARDENED STRUCTURAL SYSTEM PROMPT FORMULATION: Ensures Pydantic schema validation variables are always fully satisfied on backend entry
     const constraintMetadataFallback = `[System Profile Schema Alignment Parameters -> Allocation Capital amount: ${amount} ${currency}, Time Horizon window: ${horizon} years, Active Target profile: ${riskProfile}, Sectors target list matrix: ${sectorsToPass.join(', ')}]`;
 
     if (structuredPrompt) {
@@ -227,7 +228,7 @@ function App() {
           <button type="button" style={{...styles.marketTab, ...(market === 'american' ? styles.activeMarketTab : {})}} onClick={() => { setMarket('american'); setAmount(5000); setData(null); }}>🇺🇸 US DESK</button>
         </div>
 
-        {/* THREE-COLUMN INPUT WORKSPACE AREA */}
+        {/* THREE-COLUMN COMPLIANT INPUT WORKSPACE */}
         <div style={styles.mainWorkspaceLayout} className="main-workspace-layout">
           
           {/* Column 1: AI Prompt Submissions */}
@@ -252,7 +253,7 @@ function App() {
             </div>
           </section>
 
-          {/* Column 2: Strategy Constraint Sliders */}
+          {/* Column 2: Strategy Constraint Parameters */}
           <section style={styles.controlCard}>
             <h2 style={styles.sectionHeader}>🎛️ Strategic Constraint Parameters</h2>
             <div style={styles.manualForm}>
@@ -312,14 +313,25 @@ function App() {
                 </div>
               </div>
 
-              <button 
-                type="button" 
-                onClick={handleManualSubmit} 
-                style={{...styles.submitButton, backgroundColor: '#0284c7'}} 
-                disabled={loading || attachedFile}
-              >
-                {attachedFile ? 'BYPASSED IN FILE MODE' : 'APPLY STRATEGIC MATRIX CONFIG'}
-              </button>
+              {/* AUTOMATED MODE UNLOCKER: If in file mode, turns into an instant master reset clear switch */}
+              {!attachedFile ? (
+                <button 
+                  type="button" 
+                  onClick={handleManualSubmit} 
+                  style={{...styles.submitButton, backgroundColor: '#0284c7'}} 
+                  disabled={loading}
+                >
+                  {loading ? 'COMPUTING VALUES...' : 'APPLY STRATEGIC MATRIX CONFIG'}
+                </button>
+              ) : (
+                <button 
+                  type="button" 
+                  onClick={removeAttachedFile} 
+                  style={{...styles.submitButton, backgroundColor: '#ef4444', animation: 'pulse 2s infinite'}}
+                >
+                  ↩ RESET DESK TO QUANT MODE
+                </button>
+              )}
             </div>
           </section>
 
@@ -532,11 +544,9 @@ function App() {
 const styles = {
   container: { backgroundColor: '#070a13', color: '#c9d1d9', minHeight: '100vh', fontFamily: '"Fira Code", monospace, system-ui', padding: '24px' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #161b26', paddingBottom: '20px', marginBottom: '24px', position: 'relative' },
-  
   title: { color: '#58a6ff', fontSize: '24px', fontWeight: '800', letterSpacing: '1.2px', fontFamily: '"Absolute Vodka", "Fira Code", monospace', display: 'block', textAlign: 'left', width: 'fit-content' },
   underlineContainer: { width: '100%', display: 'flex', justifyContent: 'flex-start', marginTop: '2px' },
   centerBlueLine: { height: '3px', backgroundColor: '#58a6ff', width: '385px', borderRadius: '2px' },
-  
   subtitle: { color: '#6e7681', fontSize: '13px', marginTop: '8px' },
   statusBadge: { backgroundColor: '#0d192b', border: '1px solid #1f3a5f', borderRadius: '20px', padding: '6px 14px', color: '#58a6ff', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' },
   statusDot: { width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%', display: 'inline-block', boxShadow: '0 0 10px #10b981' },
@@ -544,7 +554,6 @@ const styles = {
   marketToggleRow: { display: 'flex', gap: '12px', marginBottom: '24px', backgroundColor: '#0d111a', padding: '8px', borderRadius: '12px', border: '1px solid #1f242e' },
   marketTab: { flex: 1, backgroundColor: 'transparent', border: 'none', color: '#8b949e', padding: '12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s' },
   activeMarketTab: { backgroundColor: '#1c2333', color: '#58a6ff', border: '1px solid #2d3545' },
-  
   mainWorkspaceLayout: { display: 'grid', gridTemplateColumns: '1fr 1.1fr 0.9fr', gap: '24px', marginBottom: '24px' },
   controlCard: { backgroundColor: '#0d111a', border: '1px solid #1f242e', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' },
   sectionHeader: { fontSize: '13px', color: '#8b949e', textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '1px', borderBottom: '1px solid #1f242e', paddingBottom: '8px', fontWeight: '700' },
@@ -552,7 +561,6 @@ const styles = {
   manualForm: { display: 'flex', flexDirection: 'column', gap: '14px' },
   grid2Col: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
   textarea: { backgroundColor: '#141822', border: '1px solid #2d3545', borderRadius: '8px', color: '#e6edf3', padding: '16px', fontSize: '13px', minHeight: '130px', resize: 'none', outline: 'none', lineHeight: '1.6', fontFamily: 'inherit' },
-  
   separatedUploaderLayout: { display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'flex-start' },
   pdfDropZone: { border: '1px dashed #2d3545', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' },
   pdfLabelUpload: { fontSize: '11px', color: '#8b949e', cursor: 'pointer', display: 'block', lineHeight: '1.4' },
@@ -560,10 +568,8 @@ const styles = {
   removeFileBtn: { marginLeft: 'auto', backgroundColor: 'transparent', border: 'none', color: '#f85149', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', padding: '4px' },
   activeUploaderStatusBadge: { marginTop: '14px', alignSelf: 'center', backgroundColor: 'rgba(56,189,248,0.06)', border: '1px solid #1e293b', color: '#38bdf8', borderRadius: '20px', padding: '5px 12px', fontSize: '10px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' },
   uploaderPulseDot: { width: '6px', height: '6px', backgroundColor: '#38bdf8', borderRadius: '50%', display: 'inline-block' },
-  
   ragDisplayGridResp: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },
   ragExtractSubPane: { backgroundColor: '#0c1220', border: '1px solid #1e293b', padding: '20px', borderRadius: '8px' },
-
   submitButton: { backgroundColor: '#238636', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '14px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontFamily: 'inherit', marginTop: '4px' },
   sliderGroup: { display: 'flex', flexDirection: 'column', gap: '4px' },
   label: { fontSize: '11px', color: '#8b949e' },
