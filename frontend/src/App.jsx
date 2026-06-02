@@ -45,7 +45,8 @@ function App() {
 
   const removeAttachedFile = () => {
     setAttachedFile(null);
-    setData(null); // Clear previous reports upon document reset to stay decoupled
+    setData(null);   // CRITICAL FIX: Wipes the data payload cache so the UI resets back to Stock Mode instantly
+    setPrompt('');   // Optional: Clears the text box for a fresh slate
   };
 
   // CORE NETWORK CONTROLLER: Standardized transmission architecture ensuring form payloads map smoothly via multipart FormData
