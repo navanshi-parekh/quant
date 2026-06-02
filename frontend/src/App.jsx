@@ -47,7 +47,7 @@ function App() {
     setAttachedFile(null);
   };
 
-  // FULLY ROBUST ARCHITECTURE: Enforces slider defaults directly into form processing blocks
+  // CORE NETWORK CONTROLLER: Standardized transmission architecture ensuring sector payloads map smoothly via multipart FormData
   const executePipelineRequest = async (payloadPrompt, selectedMarket, activeSectors) => {
     setLoading(true);
     setError(null);
@@ -63,6 +63,7 @@ function App() {
       formDataBody.append('horizon_strategy', horizonStrategy);
       formDataBody.append('target_profit_percentage', Number(targetProfit));
       
+      // Hand off sectors explicitly down the multi-part data payload stream
       activeSectors.forEach((sector) => {
         formDataBody.append('sectors', sector);
       });
@@ -91,7 +92,7 @@ function App() {
   };
 
   const handleManualSubmit = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const currency = market === 'american' ? 'USD' : 'INR';
     const sectorsToPass = selectedSectors.length > 0 ? selectedSectors : ['Technology'];
     
@@ -101,16 +102,16 @@ function App() {
   };
 
   const handlePromptSubmit = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     const sectorsToPass = selectedSectors.length > 0 ? selectedSectors : ['Technology'];
     const currency = market === 'american' ? 'USD' : 'INR';
     
-    // CRITICAL SAFETY GUARD: If text is missing explicit values, append mathematical context to preserve parsing paths
     let structuredPrompt = prompt.trim();
+    if (!structuredPrompt) return;
+
+    // SAFETY GUARD: If text is missing explicit parameters, append mathematical metadata to preserve regex parsing paths
     if (!structuredPrompt.includes(String(amount)) && !structuredPrompt.toLowerCase().includes('years')) {
       structuredPrompt += ` [Constraint Metadata Base Configuration Override: Deploy exactly ${amount} ${currency} over ${horizon} years]`;
-    } else if (!structuredPrompt) {
-      return;
     }
 
     executePipelineRequest(structuredPrompt, market, sectorsToPass);
@@ -133,6 +134,7 @@ function App() {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
   };
 
+  // PARSING ENGINE: Seamless key-value flattening ensures nested JSON strings or objects unpack cleanly
   const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
     if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
     
@@ -201,7 +203,11 @@ function App() {
 
       <header style={styles.header} className="header-responsive">
         <div>
+          {/* USER HEADLINE PREFERENCE COMPLIANCE */}
           <h1 style={styles.title}>QUANT-LLM ADVISOR TERMINAL</h1>
+          <div style={styles.underlineContainer}>
+            <div style={styles.centerBlueLine}></div>
+          </div>
           <p style={styles.subtitle}>Institutional Grade Multi-Agent Optimization Engine</p>
         </div>
         <div style={styles.statusBadge}><span style={styles.statusDot}></span> ENGINE ONLINE</div>
@@ -210,14 +216,14 @@ function App() {
       <main style={styles.main}>
         {/* Market Selector Toggles */}
         <div style={styles.marketToggleRow}>
-          <button style={{...styles.marketTab, ...(market === 'indian' ? styles.activeMarketTab : {})}} onClick={() => { setMarket('indian'); setAmount(75000); setData(null); }}>🇮🇳 INDIAN DESK</button>
-          <button style={{...styles.marketTab, ...(market === 'american' ? styles.activeMarketTab : {})}} onClick={() => { setMarket('american'); setAmount(5000); setData(null); }}>🇺🇸 US DESK</button>
+          <button type="button" style={{...styles.marketTab, ...(market === 'indian' ? styles.activeMarketTab : {})}} onClick={() => { setMarket('indian'); setAmount(75000); setData(null); }}>🇮🇳 INDIAN DESK</button>
+          <button type="button" style={{...styles.marketTab, ...(market === 'american' ? styles.activeMarketTab : {})}} onClick={() => { setMarket('american'); setAmount(5000); setData(null); }}>🇺🇸 US DESK</button>
         </div>
 
         <div style={styles.inputConfigLayout} className="input-layout-responsive">
           <section style={styles.controlCard}>
             <h2 style={styles.sectionHeader}>🤖 AI Prompt Interface</h2>
-            <form onSubmit={handlePromptSubmit} style={styles.form}>
+            <div style={styles.formStack}>
               <textarea
                 style={styles.textarea}
                 value={prompt}
@@ -226,7 +232,7 @@ function App() {
                 disabled={loading}
               />
               
-              {/* Optional Report Upload Dropzone */}
+              {/* Context Augmentation Report Dropzone File Slot */}
               <div style={styles.pdfDropZone}>
                 <div style={{fontSize: '11px', color: '#8b949e', fontWeight: 'bold', marginBottom: '6px', textTransform: 'uppercase'}}>
                   📁 Context Augmentation: Corporate Report (Optional)
@@ -247,15 +253,21 @@ function App() {
                 )}
               </div>
 
-              <button type="submit" style={styles.submitButton} disabled={loading}>
+              {/* CRITICAL BUTTON EVENT ISOLATION: Explicit type detaches it from standard document double-fires */}
+              <button 
+                type="button" 
+                onClick={handlePromptSubmit} 
+                style={styles.submitButton} 
+                disabled={loading}
+              >
                 {loading ? 'PROCESSING AUDIT COMPREHENSION...' : 'RUN AI PROMPT OPTIMIZATION'}
               </button>
-            </form>
+            </div>
           </section>
 
           <section style={styles.controlCard}>
             <h2 style={styles.sectionHeader}>🎛️ Strategic Constraint Parameters</h2>
-            <form onSubmit={handleManualSubmit} style={styles.manualForm}>
+            <div style={styles.manualForm}>
               <div style={styles.grid2Col} className="grid-2col-responsive">
                 <div style={styles.sliderGroup}>
                   <label style={styles.label}>Allocation: <strong>{currencySymbol}{amount.toLocaleString('en-IN')}</strong></label>
@@ -312,14 +324,20 @@ function App() {
                 </div>
               </div>
 
-              <button type="submit" style={{...styles.submitButton, backgroundColor: '#0284c7'}} disabled={loading}>
+              {/* CRITICAL BUTTON EVENT ISOLATION: Explicit type detaches it from parameter double-fires */}
+              <button 
+                type="button" 
+                onClick={handleManualSubmit} 
+                style={{...styles.submitButton, backgroundColor: '#0284c7'}} 
+                disabled={loading}
+              >
                 {loading ? 'RECALCULATING CORES...' : 'APPLY STRATEGIC MATRIX CONFIG'}
               </button>
-            </form>
+            </div>
           </section>
         </div>
 
-        {/* Strategic Sharpe Ratio Explainer */}
+        {/* Structural Telemetry Layout Row */}
         <div style={styles.splitTelemetryRow}>
           <section style={{...styles.educationalCard, margin: 0, flex: 1.2}}>
             <h3 style={styles.cardTitle}>🧠 Sharpe Ratio Core Metric: Risk-Adjusted Return Performance</h3>
@@ -362,7 +380,7 @@ function App() {
 
         {data && data.optimized_portfolio && (
           <div style={{marginTop: '24px'}}>
-            {/* KPI Telemetry Panels */}
+            {/* KPI Telemetry Metrics */}
             <div style={styles.kpiGrid}>
               <div style={styles.kpiCard}>
                 <div style={styles.kpiLabel}>TOTAL ALLOCATED CAPITAL</div>
@@ -386,7 +404,7 @@ function App() {
               </div>
             </div>
 
-            {/* Recharts Timeline */}
+            {/* Backtest Trajectory Map */}
             {data.backtest_trajectory && data.backtest_trajectory.length > 0 && (
               <section style={{...styles.card, marginBottom: '24px', border: '1px solid #1f242e'}}>
                 <h3 style={styles.cardTitle}>📈 Portfolio Growth Engine Timeline Forecast</h3>
@@ -432,7 +450,7 @@ function App() {
               </section>
             )}
 
-            {/* Asset Matrix Spreadsheet */}
+            {/* Asset Matrix Spreadsheet Card */}
             <div style={{marginBottom: '24px'}}>
               <div style={styles.card}>
                 <h3 style={styles.cardTitle}>📊 Optimal Asset Matrix & Fundamental Screener</h3>
@@ -480,7 +498,7 @@ function App() {
               </div>
             </div>
 
-            {/* Side-by-Side Analytical Streams */}
+            {/* ADVERSARIAL AGENT INTELLIGENCE SIDE-BY-SIDE PANELS */}
             <div style={styles.adversarialGrid} className="adversarial-grid-responsive">
               <div style={styles.card}>
                 <h3 style={{...styles.cardTitle, color: '#34d399', borderBottom: '1px solid rgba(52,211,153,0.2)'}}>
@@ -510,9 +528,14 @@ function App() {
 
 const styles = {
   container: { backgroundColor: '#070a13', color: '#c9d1d9', minHeight: '100vh', fontFamily: '"Fira Code", monospace, system-ui', padding: '24px' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #161b26', paddingBottom: '20px', marginBottom: '24px' },
-  title: { color: '#58a6ff', fontSize: '24px', fontWeight: '800', letterSpacing: '1.2px' },
-  subtitle: { color: '#6e7681', fontSize: '13px', marginTop: '4px' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #161b26', paddingBottom: '20px', marginBottom: '24px', position: 'relative' },
+  
+  // BRAND STYLING PREFERENCES COMPLIANCE (Precise Absolute Font & Center Underline Mappings)
+  title: { color: '#58a6ff', fontSize: '24px', fontWeight: '800', letterSpacing: '1.2px', fontFamily: '"Absolute Vodka", "Fira Code", monospace', display: 'block', textAlign: 'left', width: 'fit-content' },
+  underlineContainer: { width: '100%', display: 'flex', justifyContent: 'flex-start', marginTop: '2px' },
+  centerBlueLine: { height: '3px', backgroundColor: '#58a6ff', width: '385px', borderRadius: '2px' },
+  
+  subtitle: { color: '#6e7681', fontSize: '13px', marginTop: '8px' },
   statusBadge: { backgroundColor: '#0d192b', border: '1px solid #1f3a5f', borderRadius: '20px', padding: '6px 14px', color: '#58a6ff', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' },
   statusDot: { width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%', display: 'inline-block', boxShadow: '0 0 10px #10b981' },
   main: { maxWidth: '1600px', margin: '0 auto' },
@@ -522,15 +545,18 @@ const styles = {
   inputConfigLayout: { display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '24px', marginBottom: '24px' },
   controlCard: { backgroundColor: '#0d111a', border: '1px solid #1f242e', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' },
   sectionHeader: { fontSize: '13px', color: '#8b949e', textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '1px', borderBottom: '1px solid #1f242e', paddingBottom: '8px', fontWeight: '700' },
-  form: { display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', justifyContent: 'space-between' },
+  formStack: { display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', justifyContent: 'space-between' },
   manualForm: { display: 'flex', flexDirection: 'column', gap: '14px' },
   grid2Col: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
   textarea: { backgroundColor: '#141822', border: '1px solid #2d3545', borderRadius: '8px', color: '#e6edf3', padding: '16px', fontSize: '13px', minHeight: '140px', resize: 'none', outline: 'none', lineHeight: '1.6', fontFamily: 'inherit' },
+  
+  // MULTIPART PDF DROPZONE UI DISPLAY
   pdfDropZone: { border: '1px dashed #2d3545', backgroundColor: '#141822', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column' },
   pdfLabelUpload: { fontSize: '11px', color: '#8b949e', textAlign: 'center', padding: '10px', cursor: 'pointer', display: 'block' },
   fileSuccessRow: { display: 'flex', alignItems: 'center', backgroundColor: '#0d191b', border: '1px solid #1b4431', borderRadius: '6px', padding: '6px 12px', gap: '8px' },
   fileIcon: { fontSize: '14px' },
   removeFileBtn: { marginLeft: 'auto', backgroundColor: 'transparent', border: 'none', color: '#f85149', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px' },
+  
   submitButton: { backgroundColor: '#238636', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '14px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontFamily: 'inherit', marginTop: '4px' },
   sliderGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', color: '#c9d1d9' },
