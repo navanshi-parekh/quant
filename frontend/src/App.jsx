@@ -38,13 +38,13 @@ function App() {
     const file = e.target.files[0];
     if (file && file.type === 'application/pdf') {
       setAttachedFile(file);
-      setData(null); // Clear previous runs so screen is ready for audit
+      setData(null); 
     } else {
       alert('Invalid file structure. Please drop or select an official corporate .pdf report.');
     }
   };
 
-  // COMPLETE WORKSPACE RESET ROUTINE (Eliminates the need for any page refreshes)
+  // COMPLETE WORKSPACE RESET ROUTINE
   const removeAttachedFile = () => {
     setAttachedFile(null);
     setData(null);   
@@ -52,7 +52,7 @@ function App() {
     setError(null);
   };
 
-  // CORE NETWORK CONTROLLER: Standardized transmission architecture utilizing form payloads via multipart FormData
+  // CORE NETWORK CONTROLLER
   const executePipelineRequest = async (payloadPrompt, selectedMarket, activeSectors) => {
     setLoading(true);
     setError(null);
@@ -66,9 +66,8 @@ function App() {
       formDataBody.append('market', selectedMarket);
       formDataBody.append('diversification', diversification);
       formDataBody.append('horizon_strategy', horizonStrategy);
-      formDataBody.append('target_profit_percentage', Summary(targetProfit));
+      formDataBody.append('target_profit_percentage', Number(targetProfit)); // FIXED: Corrected syntax to Number
       
-      // Fixed: Appends both key signatures to satisfy strict backend Pydantic validation models
       activeSectors.forEach((sector) => {
         formDataBody.append('sectors', sector); 
         formDataBody.append('sector', sector);  
@@ -144,6 +143,7 @@ function App() {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
   };
 
+  // PARSING ENGINE: Smart string and object flattener
   const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
     if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
     
@@ -228,7 +228,7 @@ function App() {
           <button type="button" style={{...styles.marketTab, ...(market === 'american' ? styles.activeMarketTab : {})}} onClick={() => { setMarket('american'); setAmount(5000); setData(null); }}>🇺🇸 US DESK</button>
         </div>
 
-        {/* THREE-COLUMN COMPLIANT INPUT WORKSPACE */}
+        {/* THREE-COLUMN INPUT WORKSPACE */}
         <div style={styles.mainWorkspaceLayout} className="main-workspace-layout">
           
           {/* Column 1: AI Prompt Submissions */}
@@ -313,7 +313,7 @@ function App() {
                 </div>
               </div>
 
-              {/* AUTOMATED MODE UNLOCKER: If in file mode, turns into an instant master reset clear switch */}
+              {/* AUTOMATED MODE UNLOCKER */}
               {!attachedFile ? (
                 <button 
                   type="button" 
@@ -327,7 +327,7 @@ function App() {
                 <button 
                   type="button" 
                   onClick={removeAttachedFile} 
-                  style={{...styles.submitButton, backgroundColor: '#ef4444', animation: 'pulse 2s infinite'}}
+                  style={{...styles.submitButton, backgroundColor: '#dc2626'}}
                 >
                   ↩ RESET DESK TO QUANT MODE
                 </button>
@@ -411,7 +411,7 @@ function App() {
         {data && (
           <div style={{marginTop: '24px'}}>
             
-            {/* MODE A: IF NO PDF IS ATTACHED -> GENERATE THE MATHEMATICAL QUANT DESK */}
+            {/* MODE A: IF NO PDF IS ATTACHED */}
             {!attachedFile && data.optimized_portfolio && (
               <>
                 <div style={styles.kpiGrid}>
@@ -506,7 +506,7 @@ function App() {
               </>
             )}
 
-            {/* MODE B: IF FILE IS UPLOADED -> PIVOT INTERFACE TO DEDICATED REPORT SUMMARY MODE */}
+            {/* MODE B: FIXED RENDERING DECOUPLING */}
             {attachedFile && (
               <div style={{...styles.card, border: '1px solid #0284c7', backgroundColor: '#090f1c'}}>
                 <h3 style={{...styles.cardTitle, color: '#38bdf8', borderBottom: '1px solid rgba(56,189,248,0.2)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px'}}>
@@ -520,14 +520,14 @@ function App() {
                   <div style={styles.ragExtractSubPane}>
                     <h4 style={{fontSize: '12px', color: '#34d399', margin: '0 0 12px 0', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid rgba(52,211,153,0.1)', paddingBottom: '6px'}}>✨ EXTRACTED REVENUE WINS & STRATEGIC HIGHLIGHTS</h4>
                     <div style={styles.reportBlock}>
-                      {renderIntelligenceBlock(data.doc_bull || data.report_bull, '#34d399', 'DOCUMENT WIN')}
+                      {renderIntelligenceBlock(data.doc_bull || data.report_bull || data.bull_case, '#34d399', 'DOCUMENT WIN')}
                     </div>
                   </div>
                   
                   <div style={styles.ragExtractSubPane}>
                     <h4 style={{fontSize: '12px', color: '#ef4444', margin: '0 0 12px 0', fontWeight: 'bold', textTransform: 'uppercase', borderBottom: '1px solid rgba(239,68,68,0.1)', paddingBottom: '6px'}}>⚠️ DISCLOSED BALANCE SHEET RISKS & PRESSURE EXPOSURES</h4>
                     <div style={styles.reportBlock}>
-                      {renderIntelligenceBlock(data.doc_bear || data.report_bear, '#ef4444', 'DOCUMENT RISK')}
+                      {renderIntelligenceBlock(data.doc_bear || data.report_bear || data.bear_case, '#ef4444', 'DOCUMENT RISK')}
                     </div>
                   </div>
                 </div>
