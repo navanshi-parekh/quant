@@ -65,9 +65,10 @@ function App() {
       formDataBody.append('horizon_strategy', horizonStrategy);
       formDataBody.append('target_profit_percentage', Number(targetProfit));
       
-      // Hand off sectors explicitly down the multi-part data payload stream
+      // FIXED: Appends both key signatures to satisfy strict backend Pydantic validation expectations
       activeSectors.forEach((sector) => {
-        formDataBody.append('sectors', sector);
+        formDataBody.append('sectors', sector); // Plural fallback
+        formDataBody.append('sector', sector);  // Singular matching fix for image_8ccebc.png
       });
       
       if (attachedFile) {
