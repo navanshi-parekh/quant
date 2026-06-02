@@ -34,7 +34,6 @@ function App() {
     }
   };
 
-  // File Input Handler Logic
   const handleFileDropChange = (e) => {
     const file = e.target.files[0];
     if (file && file.type === 'application/pdf') {
@@ -48,7 +47,7 @@ function App() {
     setAttachedFile(null);
   };
 
-  // CRITICAL FIX: Upgraded network processing pipeline utilizing multipart FormData to align with updated backend routers
+  // FIXED: Standardized transmission architecture ensuring sector payloads map smoothly via both prompt and manual forms
   const executePipelineRequest = async (payloadPrompt, selectedMarket, activeSectors) => {
     setLoading(true);
     setError(null);
@@ -57,7 +56,6 @@ function App() {
     const backendBaseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
     try {
-      // Build native multipart binary layout envelope
       const formDataBody = new FormData();
       formDataBody.append('prompt', payloadPrompt);
       formDataBody.append('market', selectedMarket);
@@ -65,14 +63,18 @@ function App() {
       formDataBody.append('horizon_strategy', horizonStrategy);
       formDataBody.append('target_profit_percentage', Number(targetProfit));
       
-      // If a financial filing report exists, pack it down the pipeline
+      // CRITICAL UPGRADE: Hand off sectors explicitly down the multi-part data payload stream
+      activeSectors.forEach((sector) => {
+        formDataBody.append('sectors', sector);
+      });
+      
       if (attachedFile) {
         formDataBody.append('file', attachedFile);
       }
 
       const response = await fetch(`${backendBaseUrl}/api/generate-recommendation`, {
         method: 'POST',
-        body: formDataBody, // Sends multipart data securely instead of JSON strings
+        body: formDataBody,
       });
       
       if (!response.ok) throw new Error('Internal validation processing fault over backend endpoints.');
@@ -117,6 +119,7 @@ function App() {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
   };
 
+  // FIXED: Seamless key-value flattening ensures nested JSON strings map out natively without [object Object] interference
   const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
     if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
     
@@ -124,7 +127,9 @@ function App() {
     if (Array.isArray(rawText)) {
       cleanString = rawText.join('\n');
     } else if (typeof rawText === 'object') {
-      cleanString = JSON.stringify(rawText, null, 2);
+      cleanString = Object.entries(rawText)
+        .map(([key, val]) => `${key}: ${typeof val === 'object' ? JSON.stringify(val) : val}`)
+        .join('\n');
     } else {
       cleanString = String(rawText);
     }
@@ -135,7 +140,7 @@ function App() {
       const cleanText = paragraph.replace(/\*\*/g, '').replace(/[\{\}\"\[\]\,]/g, '');
       if (!cleanText.trim()) return null;
 
-      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk') || cleanText.toLowerCase().includes('case'));
+      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk') || cleanText.toLowerCase().includes('case') || cleanText.toLowerCase().includes('bullet'));
       const isBulletStep = cleanText.trim().startsWith('-') || cleanText.trim().startsWith('*') || /^\d+\./.test(cleanText.trim());
 
       if (isHeaderLine) {
@@ -208,7 +213,7 @@ function App() {
                 disabled={loading}
               />
               
-              {/* PHASE 4 OPTIONAL EXTRA FEATURE: LIVE PDF FILE DEPOSIT ZONE */}
+              {/* Context Augmentation Drag/Drop input */}
               <div style={styles.pdfDropZone}>
                 <div style={{fontSize: '11px', color: '#8b949e', fontWeight: 'bold', marginBottom: '6px', textTransform: 'uppercase'}}>
                   📁 Context Augmentation: Corporate Report (Optional)
@@ -508,14 +513,11 @@ const styles = {
   manualForm: { display: 'flex', flexDirection: 'column', gap: '14px' },
   grid2Col: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
   textarea: { backgroundColor: '#141822', border: '1px solid #2d3545', borderRadius: '8px', color: '#e6edf3', padding: '16px', fontSize: '13px', minHeight: '140px', resize: 'none', outline: 'none', lineHeight: '1.6', fontFamily: 'inherit' },
-  
-  // PHASE 4 PREMIUM INTERFACE: MULTIPART PDF DISPLAY PANELS STYLING
   pdfDropZone: { border: '1px dashed #2d3545', backgroundColor: '#141822', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column' },
   pdfLabelUpload: { fontSize: '11px', color: '#8b949e', textAlign: 'center', padding: '10px', cursor: 'pointer', display: 'block' },
   fileSuccessRow: { display: 'flex', alignItems: 'center', backgroundColor: '#0d191b', border: '1px solid #1b4431', borderRadius: '6px', padding: '6px 12px', gap: '8px' },
   fileIcon: { fontSize: '14px' },
   removeFileBtn: { marginLeft: 'auto', backgroundColor: 'transparent', border: 'none', color: '#f85149', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px' },
-  
   submitButton: { backgroundColor: '#238636', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '14px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontFamily: 'inherit', marginTop: '4px' },
   sliderGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', color: '#c9d1d9' },
