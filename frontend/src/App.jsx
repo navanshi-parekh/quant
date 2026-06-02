@@ -21,6 +21,9 @@ function App() {
   const [horizonStrategy, setHorizonStrategy] = useState('long_term');
   const [targetProfit, setTargetProfit] = useState(15);
 
+  // PHASE 4: PDF Attachment File State Tracker
+  const [attachedFile, setAttachedFile] = useState(null);
+
   const sectorsList = ['Technology', 'IT', 'Automobile', 'Energy', 'Finance', 'Commodities'];
 
   const handleSectorChange = (sector) => {
@@ -31,6 +34,21 @@ function App() {
     }
   };
 
+  // File Input Handler Logic
+  const handleFileDropChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      setAttachedFile(file);
+    } else {
+      alert('Invalid file structure. Please drop or select an official corporate .pdf report.');
+    }
+  };
+
+  const removeAttachedFile = () => {
+    setAttachedFile(null);
+  };
+
+  // CRITICAL FIX: Upgraded network processing pipeline utilizing multipart FormData to align with updated backend routers
   const executePipelineRequest = async (payloadPrompt, selectedMarket, activeSectors) => {
     setLoading(true);
     setError(null);
@@ -39,18 +57,24 @@ function App() {
     const backendBaseUrl = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
     try {
+      // Build native multipart binary layout envelope
+      const formDataBody = new FormData();
+      formDataBody.append('prompt', payloadPrompt);
+      formDataBody.append('market', selectedMarket);
+      formDataBody.append('diversification', diversification);
+      formDataBody.append('horizon_strategy', horizonStrategy);
+      formDataBody.append('target_profit_percentage', Number(targetProfit));
+      
+      // If a financial filing report exists, pack it down the pipeline
+      if (attachedFile) {
+        formDataBody.append('file', attachedFile);
+      }
+
       const response = await fetch(`${backendBaseUrl}/api/generate-recommendation`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          prompt: payloadPrompt, 
-          market: selectedMarket,
-          diversification: diversification,
-          horizon_strategy: horizonStrategy,
-          target_profit_percentage: Number(targetProfit),
-          sectors: activeSectors
-        }),
+        body: formDataBody, // Sends multipart data securely instead of JSON strings
       });
+      
       if (!response.ok) throw new Error('Internal validation processing fault over backend endpoints.');
       const result = await response.json();
       setData(result);
@@ -93,11 +117,9 @@ function App() {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
   };
 
-  // CRITICAL FIX: Hardened structure parsing engine that converts objects or arrays to strings safely before split operations
   const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
     if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
     
-    // Fallback: If Groq returns an structured array or object, convert it safely to clear .split() requirements
     let cleanString = "";
     if (Array.isArray(rawText)) {
       cleanString = rawText.join('\n');
@@ -185,8 +207,30 @@ function App() {
                 placeholder={`Describe your investment goals for the ${market} desk...`}
                 disabled={loading}
               />
+              
+              {/* PHASE 4 OPTIONAL EXTRA FEATURE: LIVE PDF FILE DEPOSIT ZONE */}
+              <div style={styles.pdfDropZone}>
+                <div style={{fontSize: '11px', color: '#8b949e', fontWeight: 'bold', marginBottom: '6px', textTransform: 'uppercase'}}>
+                  📁 Context Augmentation: Corporate Report (Optional)
+                </div>
+                {!attachedFile ? (
+                  <label style={styles.pdfLabelUpload}>
+                    <input type="file" accept=".pdf" onChange={handleFileDropChange} style={{display: 'none'}} />
+                    <span style={{color: '#58a6ff', cursor: 'pointer'}}>Click to upload quarterly report PDF</span> or drag file here
+                  </label>
+                ) : (
+                  <div style={styles.fileSuccessRow}>
+                    <span style={styles.fileIcon}>📄</span>
+                    <div style={{overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '240px'}}>
+                      <strong style={{color: '#34d399', fontSize: '12px'}}>{attachedFile.name}</strong>
+                    </div>
+                    <button type="button" onClick={removeAttachedFile} style={styles.removeFileBtn}>✕</button>
+                  </div>
+                )}
+              </div>
+
               <button type="submit" style={styles.submitButton} disabled={loading}>
-                {loading ? 'COMPUTING INTENT...' : 'RUN AI PROMPT OPTIMIZATION'}
+                {loading ? 'PROCESSING COMPREHENSIVE DATA...' : 'RUN AI PROMPT OPTIMIZATION'}
               </button>
             </form>
           </section>
@@ -251,7 +295,7 @@ function App() {
               </div>
 
               <button type="submit" style={{...styles.submitButton, backgroundColor: '#0284c7'}} disabled={loading}>
-                {loading ? 'RECALCULATING CONSTRAINTS...' : 'APPLY STRATEGIC MATRIX CONFIG'}
+                {loading ? 'RECALCULATING MATRIX CORES...' : 'APPLY STRATEGIC MATRIX CONFIG'}
               </button>
             </form>
           </section>
@@ -463,8 +507,16 @@ const styles = {
   form: { display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', justifyContent: 'space-between' },
   manualForm: { display: 'flex', flexDirection: 'column', gap: '14px' },
   grid2Col: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' },
-  textarea: { backgroundColor: '#141822', border: '1px solid #2d3545', borderRadius: '8px', color: '#e6edf3', padding: '16px', fontSize: '13px', minHeight: '180px', resize: 'none', outline: 'none', lineHeight: '1.6', fontFamily: 'inherit' },
-  submitButton: { backgroundColor: '#238636', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '14px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontFamily: 'inherit' },
+  textarea: { backgroundColor: '#141822', border: '1px solid #2d3545', borderRadius: '8px', color: '#e6edf3', padding: '16px', fontSize: '13px', minHeight: '140px', resize: 'none', outline: 'none', lineHeight: '1.6', fontFamily: 'inherit' },
+  
+  // PHASE 4 PREMIUM INTERFACE: MULTIPART PDF DISPLAY PANELS STYLING
+  pdfDropZone: { border: '1px dashed #2d3545', backgroundColor: '#141822', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column' },
+  pdfLabelUpload: { fontSize: '11px', color: '#8b949e', textAlign: 'center', padding: '10px', cursor: 'pointer', display: 'block' },
+  fileSuccessRow: { display: 'flex', alignItems: 'center', backgroundColor: '#0d191b', border: '1px solid #1b4431', borderRadius: '6px', padding: '6px 12px', gap: '8px' },
+  fileIcon: { fontSize: '14px' },
+  removeFileBtn: { marginLeft: 'auto', backgroundColor: 'transparent', border: 'none', color: '#f85149', cursor: 'pointer', fontWeight: 'bold', fontSize: '11px' },
+  
+  submitButton: { backgroundColor: '#238636', color: '#ffffff', border: 'none', borderRadius: '8px', padding: '14px 20px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', width: '100%', fontFamily: 'inherit', marginTop: '4px' },
   sliderGroup: { display: 'flex', flexDirection: 'column', gap: '6px' },
   label: { fontSize: '12px', color: '#c9d1d9' },
   slider: { width: '100%', cursor: 'pointer', accentColor: '#0284c7' },
