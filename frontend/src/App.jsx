@@ -141,31 +141,51 @@ function App() {
     return market === 'indian' ? peValue > 25.0 : peValue > 30.0;
   };
 
+  // PARSING ENGINE: Smart string and object flattener with explicit string block safety guards
   const renderIntelligenceBlock = (rawText, accentColor, badgeLabel) => {
     if (!rawText) return <div style={{fontSize: '12px', color: '#6e7681'}}>No analysis payload returned.</div>;
     
-    let cleanString = "";
-    if (Array.isArray(rawText)) {
-      cleanString = rawText.join('\n');
-    } else if (typeof rawText === 'object') {
-      cleanString = Object.entries(rawText)
-        .map(([key, val]) => {
-          const skipKeyPrefix = ['title', 'bullet', 'text', 'body', 'content', 'value', 'desc', 'description'].includes(key.toLowerCase());
-          const valueStr = typeof val === 'object' ? JSON.stringify(val) : String(val);
-          return skipKeyPrefix ? valueStr : `${key}: ${valueStr}`;
-        })
-        .join('\n');
-    } else {
-      cleanString = String(rawText);
+    // RECURSIVE FLATTENER: Deep dives into nested dictionaries to extract pure values safely
+    const flattenToText = (input) => {
+      if (Array.isArray(input)) {
+        return input.map(item => flattenToText(item)).join('\n');
+      }
+      if (input !== null && typeof input === 'object') {
+        // If it's a raw object but contains a localized string signature, return it directly
+        if (typeof input.toString === 'function' && !input.hasOwnProperty('toString') && input.toString() !== '[object Object]') {
+          return input.toString();
+        }
+        
+        return Object.entries(input)
+          .map(([key, val]) => {
+            const skipKeyPrefix = ['title', 'bullet', 'text', 'body', 'content', 'value', 'desc', 'description', 'bull_case', 'bear_case', 'doc_bull', 'doc_bear'].includes(key.toLowerCase());
+            const valueStr = (val !== null && typeof val === 'object') ? flattenToText(val) : String(val);
+            return skipKeyPrefix ? valueStr : `${key}: ${valueStr}`;
+          })
+          .join('\n');
+      }
+      return String(input);
+    };
+
+    let cleanString = flattenToText(rawText);
+
+    // Fallback Guard: If the flattener fails or returns a generic object signature, extract keys manually
+    if (cleanString.includes('[object Object]') || cleanString === 'object Object') {
+      try {
+        cleanString = typeof rawText === 'object' ? JSON.stringify(rawText) : String(rawText);
+      } catch (e) {
+        cleanString = "Analysis data stream unpacking breakdown.";
+      }
     }
 
     return cleanString.split('\n').map((paragraph, idx) => {
       if (!paragraph.trim()) return null;
       
+      // Clean off markdown symbols and leftover raw JSON notation elements safely
       const cleanText = paragraph.replace(/\*\*/g, '').replace(/[\{\}\"\[\]\,]/g, '').trim();
       if (!cleanText) return null;
 
-      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk') || cleanText.toLowerCase().includes('case') || cleanText.toLowerCase().includes('bullet') || cleanText.toLowerCase().includes('driver') || cleanText.toLowerCase().includes('exposure') || cleanText.toLowerCase().includes('summary'));
+      const isHeaderLine = cleanText.includes(':') && (cleanText.includes('%') || cleanText.toLowerCase().includes('conviction') || cleanText.toLowerCase().includes('mitigation') || cleanText.toLowerCase().includes('risk') || cleanText.toLowerCase().includes('case') || cleanText.toLowerCase().includes('bullet') || cleanText.toLowerCase().includes('driver') || cleanText.toLowerCase().includes('exposure') || cleanText.toLowerCase().includes('summary') || cleanText.toLowerCase().includes('premium'));
       const isBulletStep = cleanText.startsWith('-') || cleanText.startsWith('*') || /^\d+\./.test(cleanText);
 
       if (isHeaderLine) {
